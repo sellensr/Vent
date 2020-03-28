@@ -303,8 +303,8 @@ boolean doConsoleCommand(String cmd) {
 
 void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
-  P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. T28.2,6.3,1.0\n");
-  P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. T38.2,16.3,1.0\n");
+  P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
+  P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
   P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
   P("  x - print an (x) message\n");
 }
