@@ -133,8 +133,8 @@ void loop()
   
   // check if it is time for the next breath
   endBreath = startBreath + perBreath;  // finish the current breath first
-  if( endBreath - millis() > 60000 ||   // we are past the end of expiration
-      v_p < p_epl - p_eplTol            // we are below inspiration trigger
+  if( endBreath - millis() > 60000      // we are past the end of expiration
+      || ((v_p > 1.0) && (v_p < p_epl - p_eplTol))         // we have a pressure and are below inspiration trigger
       ) {
     v_it = endInspiration - startBreath;  // store times for last breath
     v_et = endBreath - endInspiration;
@@ -200,23 +200,12 @@ void loop()
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_epp, v_epl, v_et);
     sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %5u", sc, v_bpm, v_v, v_mv, v_alarm);
     sprintf(sc, "%s\n", sc);
-//    PR(sc);
+//    PR(sc);   // print the whole string to the console
     Serial1.print(sc);
-    // Don't remove any of this stuff from the output line.
-//    PR(millis());
-//    PCS(prog,3); PCS(fracCPAP); PCS(fracPEEP); PCS(fracDual);
-//    PCS(v_o2); 
-    PL(v_p); 
-//    PCS(v_q);
-//    PCS(v_ipp); PCS(v_ipl); PCS(v_it);
-//    PCS(v_epp); PCS(v_epl); PCS(v_et);
-//    PCS(v_bpm); PCS(v_v,0); PCS(v_mv,0); PCS(v_alarm);
-    // print other debug stuff after this required data
-//    PCS(startBreath); PCS(endInspiration); PCS(endBreath); 
-  //  PCS(PV); PCS(dP); 
-  //  PCS(fracCPAP); PCS(fracPEEP);
-  //  PCS(posCPAP); PCS(posPEEP); PCS(posDual);
-//    PL();
+    PL("Valve, Pressure[cmH2O]");
+    P((fracDual + 1.5) * 10);
+    PCS(v_p);    // use with Serial plotter to visualize the pressure output
+    PL();
   }
 }
 
