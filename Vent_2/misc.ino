@@ -61,6 +61,11 @@ boolean doConsoleCommand(String cmd) {
     P(p_iph); P(" / "); P(p_ipl);  P(" / "); P(p_iphTol); P(" cm H2O\n");
     ret = true;
     break;
+  case 'R': // Run Mode
+    p_closeCPAP = false;
+    PL("Taking CPAP valve to run mode.");
+    ret = true;
+    break;
   case 't': // breath timing
     if (val[0] >= IT_MIN) p_it = min(val[0], IT_MAX);
     if (val[1] >= ET_MIN) p_et = min(val[1], ET_MAX);
@@ -80,6 +85,11 @@ boolean doConsoleCommand(String cmd) {
     PL("The x/X command just prints this message back to the console");
     ret = true;
     break;
+  case 'X': // Close CPAP
+    p_closeCPAP = true;
+    PL("CPAP valve going to closed position.");
+    ret = true;
+    break;
   default:
     ret = false; // didn't recognize command
     break;
@@ -91,7 +101,10 @@ void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
   P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
   P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
+  P("  R - set to normal (R)un mode, e.g. R\n");
   P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
+  P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");
+  P("  X - close the CPAP valve, e.g. X\n");
   P("  x - print an (x) message\n");
 }
 
