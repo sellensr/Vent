@@ -5,11 +5,15 @@
 
 RWS_UNO uno = RWS_UNO();
 #define SEALEVELPRESSURE_HPA (1013.25)
-#define PB_DEF 4000    // breathing rate defaults to 15
+#define PB_DEF 6000    // breathing rate defaults to 10
 #define PB_MAX 10000
 #define PB_MIN 2500
 #define INF_DEF 0.25    // first 40% of breath is inspiration
 #define PAUSE_DEF 0 // pause before the next breath
+#define IT_MAX 10000
+#define ET_MAX 10000
+#define IT_MIN 500
+#define ET_MIN 1000
 
 #define A_BAT A5
 #define DIV_BAT 5.0
@@ -18,12 +22,12 @@ RWS_UNO uno = RWS_UNO();
 Adafruit_BME280 bmeA, bmeV; // I2C
 
 Servo servoCPAP, servoPEEP, servoDual;  // create servo object to control a servo
-int aMinCPAP = 91, aMaxCPAP = 125;
-int aMinPEEP = 84, aMaxPEEP = 50;
-int aCloseCPAP = 110, aClosePEEP = 77;
+int aMinCPAP = 91, aMaxCPAP = 125;      // independent CPAP valve position settings [servo degrees closed (Min) and open (Max)]
+int aMinPEEP = 84, aMaxPEEP = 50;       // independent PEEP valve position settings [servo degrees closed (Min) and open (Max)]
+int aCloseCPAP = 110, aClosePEEP = 77;  // dual valve position settings for fully closed [servo degrees]
 double aMid = (aCloseCPAP + aClosePEEP) / 2.0;
 
-bool readPBME = true;
+bool readPBME = false;    // set false to allow testing on a machine with no BMEs or to use other P sensors instead
 
 // Variables from UI definition + a bit more
 double v_o2 = 0.0;    // measured instantaneous oxygen volume fraction [0 to 1.0]
@@ -31,10 +35,10 @@ double v_p = 99.9;     // current instantaneous pressure [cm H2O]
 double v_q = 99.9;      // current instantaneous flow to patient [l/min]
 double v_ipp = 99.9;    // highest pressure during inspiration phase of last breath [cm H2o]
 double v_ipl = 99.9;    // lowest pressure during inspiration phase of last breath [cm H2O]
-unsigned v_it = 0;      // inspiration time during last breath [ms]
+int v_it = 0;      // inspiration time during last breath [ms]
 double v_epp = 99.9;    // highest pressure during expiration phase of last breath [cm H2o]
 double v_epl = 99.9;    // lowest pressure during expiration phase of last breath [cm H2O]
-unsigned v_et = 0;       // expiration time during last breath [ms]
+int v_et = 0;       // expiration time during last breath [ms]
 double v_bpm = 0.0;     // BPM for last breath
 double v_v = 0.0;       // inspiration volume of last breath [ml]
 double v_mv = 0.0;      // volume per minute averaged over recent breaths [l / min]
@@ -42,32 +46,42 @@ byte v_alarm = 0;       // status code
 double v_batv = 0.;     // measured battery voltage, should be over 13 for powered, over 12 for charge remaining
 double v_venturiv = 0.;     // measured venturi voltage
 
+double p_iph = 20.0;     // the inspiration pressure upper bound.
+double p_ipl = 6.0;     // the inspiration pressure lower bound -- PEEP setting.
+double p_iphTol = 1.0;  // excursion from p_eph required to trigger start of expiration if P > p_iph + p_iphTol
+double p_eph = 20.0;     // the expiration pressure upper bound.
+double p_epl = 6.0;     // the expiration pressure lower bound -- PEEP setting.
+double p_eplTol = 1.0;  // excursion from p_epl required to trigger start of new breath if P < p_epl - p_eplTol
+int p_it = PB_DEF * INF_DEF;  // inspiration time setting
+int p_et = PB_DEF - p_it;     // expiration time setting
 
 void setup()
 {
   uno.begin(115200);
-  Serial1.begin(115200);
+  Serial1.begin(115200);  // for communication to display unit or other supervisor. RX-->GND for none
   while(!Serial1 && millis() < 5000);
 
   Serial.print("\n\nRWS Vent_2\n\n");
-  unsigned status = bmeA.begin(0x77);  
-  PR("bmeA started\n");
-  if (!status) {
-      Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
-      Serial.print("SensorID was: 0x"); Serial.println(bmeA.sensorID(),16);
-      Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-      Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-      Serial.print("        ID of 0x60 represents a BME 280.\n");
-      Serial.print("        ID of 0x61 represents a BME 680.\n");
-  }
-  status = bmeV.begin(0x76);  
-  if (!status) {
-      Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
-      Serial.print("SensorID was: 0x"); Serial.println(bmeV.sensorID(),16);
-      Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-      Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-      Serial.print("        ID of 0x60 represents a BME 280.\n");
-      Serial.print("        ID of 0x61 represents a BME 680.\n");
+  if(readPBME){
+    unsigned status = bmeA.begin(0x77);  
+    PR("bmeA started\n");
+    if (!status) {
+        Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
+        Serial.print("SensorID was: 0x"); Serial.println(bmeA.sensorID(),16);
+        Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+        Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+        Serial.print("        ID of 0x60 represents a BME 280.\n");
+        Serial.print("        ID of 0x61 represents a BME 680.\n");
+    }
+    status = bmeV.begin(0x76);  
+    if (!status) {
+        Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
+        Serial.print("SensorID was: 0x"); Serial.println(bmeV.sensorID(),16);
+        Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+        Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+        Serial.print("        ID of 0x60 represents a BME 280.\n");
+        Serial.print("        ID of 0x61 represents a BME 680.\n");
+    }
   }
   servoDual.attach(11);  
   servoCPAP.attach(10);  
@@ -87,9 +101,10 @@ void setup()
  
 void loop()
 {
+  // use unsigned long for millis() values, but int for short times so positive/negative differences calculate correctly
   static unsigned long lastPrint = 0;
   static unsigned long lastButton = 0;
-  static unsigned long perBreath = PB_DEF;
+  static int perBreath = PB_DEF;
   static unsigned long startBreath = 0;
   static unsigned long endInspiration = 0;
   static unsigned long endBreath = 0;
@@ -117,12 +132,15 @@ void loop()
   v_p = dP * 100 / 998 / 9.81;    // cm H2O
   
   // check if it is time for the next breath
-  endBreath = startBreath + perBreath;
-  if( endBreath - millis() > 60000 ) {  // we are past the end of expiration
+  endBreath = startBreath + perBreath;  // finish the current breath first
+  if( endBreath - millis() > 60000 ||   // we are past the end of expiration
+      v_p < p_epl - p_eplTol            // we are below inspiration trigger
+      ) {
     v_it = endInspiration - startBreath;  // store times for last breath
     v_et = endBreath - endInspiration;
     startBreath = millis();       // start a new breath
-    v_bpm = 60000. / perBreath;
+    perBreath = p_it + p_et;      // update perBreath at start of each breath
+    v_bpm = 60000. / (v_it + v_et); // set from actual times of last breath
   }
   // progress through the breath sequence from 0 to 1.0
   double prog = (millis() - startBreath) / (double) perBreath;
@@ -209,24 +227,6 @@ void loopConsole(){
           &ci)) { // returns false quickly if there has been no EOL yet
     P("\nFrom Console:");
     PL(ci);
-
-    // parse it yourself if you want the details
-    float vals[5];
-    char c = parseConsoleCommand(ci, vals, 5);
-    P(c);
-    P(" ");
-    for (int i = 0; i < 5; i++) {
-      P(vals[i]);
-      P(" ");
-    }
-    PL("parsed as floats");
-    String arg = ci.substring(1);
-    arg.trim();
-    P(c);
-    P(" ");
-    P(arg);
-    PL(" parsed as command with string");
-
     // or just send the whole String to one of these functions for parsing and
     // action
     if (!doConsoleCommand(ci)) {
@@ -237,6 +237,23 @@ void loopConsole(){
     ci = ""; // don't call readConsoleCommand() again until you have cleared the
              // string
   }
+
+  // exactly the same, except for commands input from Serial1 to ci1
+  static String ci1 = "";
+  if (readConsoleCommand1(&ci1)) {
+    P("\nFrom Serial1:");
+    PL(ci1);
+    // or just send the whole String to one of these functions for parsing and
+    // action
+    if (!doConsoleCommand(ci1)) {
+      P("Not an application specific command: ");
+      PL(ci1);
+      listConsoleCommands();
+    }
+    ci1 = ""; // don't call readConsoleCommand() again until you have cleared the
+             // string
+  }
+
 
 }
 
@@ -250,6 +267,29 @@ boolean doConsoleCommand(String cmd) {
   int ival = val[0];           // an integer version of the first float arg
   unsigned long logPeriod;
   switch (c) {
+  case 'E': // Expiratory Pressures
+    if (val[0] >= 0) p_eph = min(val[0], 50);
+    if (val[1] >= 0) p_epl = min(val[1], 20);
+    if (val[2] >= 0) p_eplTol = min(val[2], 5);
+    P("Inspiration Pressures set to: ");
+    P(p_eph); P(" / "); P(p_epl);  P(" / "); P(p_eplTol); P(" cm H2O\n");
+    ret = true;
+    break;
+  case 'I': // Inspiratory Pressures
+    if (val[0] >= 0) p_iph = min(val[0], 50);
+    if (val[1] >= 0) p_ipl = min(val[1], 20);
+    if (val[2] >= 0) p_iphTol = min(val[2], 5);
+    P("Inspiration Pressures set to: ");
+    P(p_iph); P(" / "); P(p_ipl);  P(" / "); P(p_iphTol); P(" cm H2O\n");
+    ret = true;
+    break;
+  case 't': // breath timing
+    if (val[0] >= IT_MIN) p_it = min(val[0], IT_MAX);
+    if (val[1] >= ET_MIN) p_et = min(val[1], ET_MAX);
+    P("Inspiration/Expiration Times set to: ");
+    P(p_it); P(" / "); P(p_et); P(" ms\n");
+    ret = true;
+    break;
   case 'p': // minimum logging period in seconds
     if (val[0] > 0.001)
       logPeriod = min(val[0], 3600.0); // micros() will break if larger
@@ -270,7 +310,8 @@ boolean doConsoleCommand(String cmd) {
 
 void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
-  P("  p - set minimum (p)eriod between log entries [s], e.g. p3.25\n");
+  P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
+  P("  E - set desired patient (E)piratory pressures high/low/trig tol [cm H2O], e.g. T28.2,6.3,1.0\n");
   P("  x - print an (x) message\n");
 }
 
