@@ -16,7 +16,7 @@ Adafruit_BME280 bmeA, bmeV; // I2C
 Servo servoCPAP, servoPEEP, servoDual;  // create servo object to control a servo
 int aMinCPAP = 91, aMaxCPAP = 125;
 int aMinPEEP = 84, aMaxPEEP = 50;
-int aCloseCPAP = 95, aClosePEEP = 85;
+int aCloseCPAP = 94, aClosePEEP = 84;
 double aMid = (aCloseCPAP + aClosePEEP) / 2.0;
 
 double Ppat = 99.9;   // the current pressure to the patient [cm H2O]

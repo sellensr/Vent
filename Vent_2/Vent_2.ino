@@ -1,27 +1,9 @@
-// All this Serial.print() will get tedious -- define some shortcuts
-// These will make it easy to generate CSV data
-// P(thing) or PR(thing) expands to Serial.print(thing) 
-#ifndef ARDUINO_ARCH_ESP32
-  #define P Serial.print // (but it seems to make the ESP32 barf)
-  #define PR Serial.print
-#else
-  #define PR Serial.print
-#endif
-// PL(thing) expands to Serial.println(thing)
-#define PL Serial.println
-// PCS(thing) expands to Serial.print(", ");Serial.print(thing)
-#define PCS Serial.print(", ");Serial.print
-// PCSL(thing) expands to Serial.print(", ");Serial.println(thing)
-#define PCSL Serial.print(", ");Serial.println
-#define BUTTON_PIN 12
-
 #include "RWS_UNO.h"
-
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <Servo.h>
 
-RWS_UNO rws = RWS_UNO();
+RWS_UNO uno = RWS_UNO();
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define PB_DEF 4000    // breathing rate defaults to 15
 #define PB_MAX 10000
@@ -38,10 +20,10 @@ Adafruit_BME280 bmeA, bmeV; // I2C
 Servo servoCPAP, servoPEEP, servoDual;  // create servo object to control a servo
 int aMinCPAP = 91, aMaxCPAP = 125;
 int aMinPEEP = 84, aMaxPEEP = 50;
-int aCloseCPAP = 118, aClosePEEP = 72;
+int aCloseCPAP = 110, aClosePEEP = 77;
 double aMid = (aCloseCPAP + aClosePEEP) / 2.0;
 
-bool readP = false;
+bool readPBME = true;
 
 // Variables from UI definition + a bit more
 double v_o2 = 0.0;    // measured instantaneous oxygen volume fraction [0 to 1.0]
@@ -63,12 +45,13 @@ double v_venturiv = 0.;     // measured venturi voltage
 
 void setup()
 {
-  rws.begin(115200);
-//  Serial.begin(115200);
-//  while(!Serial && millis() < 5000);
+  uno.begin(115200);
+  Serial1.begin(115200);
+  while(!Serial1 && millis() < 5000);
 
-  Serial.print("\n\nRWS Vent_1\n\n");
+  Serial.print("\n\nRWS Vent_2\n\n");
   unsigned status = bmeA.begin(0x77);  
+  PR("bmeA started\n");
   if (!status) {
       Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
       Serial.print("SensorID was: 0x"); Serial.println(bmeA.sensorID(),16);
@@ -96,7 +79,9 @@ void setup()
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   delay(100); 
   PR("Serial lines of CSV data at 115200 baud\n");
-  PR("millis(), prog, fracCPAP, fracPEEP, fracDual, v_o2, v_p, v_q, v_ipp, v_ipl, v_it, v_epp, v_epl, v_et, v_bpm, v_v, v_mv, v_alarm, plus other stuff\n");
+  PR("  millis(),  prog,  CPAP,  PEEP,  Dual,  v_o2,   v_p,   v_q, v_ipp, v_ipl,  v_it, v_epp, v_epl,  v_et, v_bpm,   v_v,   v_mv, v_alarm, plus other stuff\n");
+  Serial1.print("Serial lines of CSV data at 115200 baud\n");
+  Serial1.print("  millis(),  prog,  CPAP,  PEEP,  Dual,  v_o2,   v_p,   v_q, v_ipp, v_ipl,  v_it, v_epp, v_epl,  v_et, v_bpm,   v_v,   v_mv, v_alarm, plus other stuff\n");
 }
 
  
@@ -115,18 +100,19 @@ void loop()
   static double setPEEP = 5.0;  // PEEP threshold
   double TA = 0, PA = 0, TV = 0, PV = 0;
 
-  rws.run();
+  uno.run();    // keep track of things
+  loopConsole();// check for console input
   // Test for loop rate
-  if (rws.dtAvg() > 100000) PR("Taking longer than 100 ms per loop!\n");
+  if (uno.dtAvg() > 100000) PR("Taking longer than 100 ms per loop!\n");
   // Measure current state
-  if(readP){
+  if(readPBME){
     TA = bmeA.readTemperature();
     PA = bmeA.readPressure(); // Pa
     TV = bmeV.readTemperature();
     PV = bmeV.readPressure(); // Pa
   }
-  v_batv = rws.getV(A_BAT) * DIV_BAT;
-  v_venturiv = rws.getV(A_VENTURI);
+  v_batv = uno.getV(A_BAT) * DIV_BAT;
+  v_venturiv = uno.getV(A_VENTURI);
   dP = dP * 0.9 + (PV - PA - 0.0) * 0.1; 
   v_p = dP * 100 / 998 / 9.81;    // cm H2O
   
@@ -187,20 +173,169 @@ void loop()
   v_v = 500;
   v_mv = v_v * v_bpm;
   v_alarm = 0;
-  if (millis()-lastPrint > 0) {
+  if (millis()-lastPrint > 50) {
     lastPrint = millis();
+    char sc[200] = {0};
+    sprintf(sc, "%10lu, %5.3f, %5.2f, %5.2f, %5.2f", millis(), prog, fracCPAP, fracPEEP, fracDual);
+    sprintf(sc, "%s, %5.3f, %5.2f, %5.1f", sc, v_o2, v_p, v_q);
+    sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_ipp, v_ipl, v_it);
+    sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_epp, v_epl, v_et);
+    sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %5u", sc, v_bpm, v_v, v_mv, v_alarm);
+    sprintf(sc, "%s\n", sc);
+//    PR(sc);
+    Serial1.print(sc);
     // Don't remove any of this stuff from the output line.
-    PR(millis());
-    PCS(prog,3); PCS(fracCPAP); PCS(fracPEEP); PCS(fracDual);
-    PCS(v_o2); PCS(v_p); PCS(v_q);
-    PCS(v_ipp); PCS(v_ipl); PCS(v_it);
-    PCS(v_epp); PCS(v_epl); PCS(v_et);
-    PCS(v_bpm); PCS(v_v,0); PCS(v_mv,0); PCS(v_alarm);
+//    PR(millis());
+//    PCS(prog,3); PCS(fracCPAP); PCS(fracPEEP); PCS(fracDual);
+//    PCS(v_o2); 
+    PL(v_p); 
+//    PCS(v_q);
+//    PCS(v_ipp); PCS(v_ipl); PCS(v_it);
+//    PCS(v_epp); PCS(v_epl); PCS(v_et);
+//    PCS(v_bpm); PCS(v_v,0); PCS(v_mv,0); PCS(v_alarm);
     // print other debug stuff after this required data
 //    PCS(startBreath); PCS(endInspiration); PCS(endBreath); 
   //  PCS(PV); PCS(dP); 
   //  PCS(fracCPAP); PCS(fracPEEP);
   //  PCS(posCPAP); PCS(posPEEP); PCS(posDual);
-    PL();
+//    PL();
   }
+}
+
+void loopConsole(){
+    // check for lines of user input from the console
+  static String ci = "";
+  if (readConsoleCommand(
+          &ci)) { // returns false quickly if there has been no EOL yet
+    P("\nFrom Console:");
+    PL(ci);
+
+    // parse it yourself if you want the details
+    float vals[5];
+    char c = parseConsoleCommand(ci, vals, 5);
+    P(c);
+    P(" ");
+    for (int i = 0; i < 5; i++) {
+      P(vals[i]);
+      P(" ");
+    }
+    PL("parsed as floats");
+    String arg = ci.substring(1);
+    arg.trim();
+    P(c);
+    P(" ");
+    P(arg);
+    PL(" parsed as command with string");
+
+    // or just send the whole String to one of these functions for parsing and
+    // action
+    if (!doConsoleCommand(ci)) {
+      P("Not an application specific command: ");
+      PL(ci);
+      listConsoleCommands();
+    }
+    ci = ""; // don't call readConsoleCommand() again until you have cleared the
+             // string
+  }
+
+}
+
+boolean doConsoleCommand(String cmd) {
+  // an application specific version that acts the same as the library function
+  boolean ret = false;
+  float val[10] = {0};
+  char c = parseConsoleCommand(cmd, val, 10);
+  String s = cmd.substring(1); // the whole string after the command letter
+  s.trim();                    // trimmed of white space
+  int ival = val[0];           // an integer version of the first float arg
+  unsigned long logPeriod;
+  switch (c) {
+  case 'p': // minimum logging period in seconds
+    if (val[0] > 0.001)
+      logPeriod = min(val[0], 3600.0); // micros() will break if larger
+    P(logPeriod, 3);
+    P(" seconds minimum between log entries.\n");
+    ret = true;
+    break;
+  case 'x': // an application command
+    PL("The x/X command just prints this message back to the console");
+    ret = true;
+    break;
+  default:
+    ret = false; // didn't recognize command
+    break;
+  }
+  return ret; // true if we found a command to execute!
+}
+
+void listConsoleCommands() {
+  P("\nApplication specific commands include:\n");
+  P("  p - set minimum (p)eriod between log entries [s], e.g. p3.25\n");
+  P("  x - print an (x) message\n");
+}
+
+/**************************************************************************/
+/*!
+    @brief Read characters from the console until you have a full line. Call at
+   the top of the loop().
+    @param consoleIn pointer to the String to store the input line.
+    @return true if we got to the end of a line, otherwise false.
+*/
+/**************************************************************************/
+boolean readConsoleCommand(String *consoleIn) {
+  while (Serial.available()) { // accumulate command string and return true when
+                               // completed.
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if ((*consoleIn).length() != 0)
+        return true; // we got to the end of the line
+    } else
+      *consoleIn += c;
+  }
+  return false;
+}
+boolean readConsoleCommand1(String *consoleIn) {
+  while (Serial1.available()) { // accumulate command string and return true when
+                               // completed.
+    char c = Serial1.read();
+    if (c == '\n' || c == '\r') {
+      if ((*consoleIn).length() != 0)
+        return true; // we got to the end of the line
+    } else
+      *consoleIn += c;
+  }
+  return false;
+}
+
+/**************************************************************************/
+/*!
+    @brief Parse the command into an array of floats that follow the one letter
+   code. Returns the first character of the String "X1.3,5.4,6.5" and puts the
+   floats in val[]. No guarantees of val[i] result if there isn't a valid float
+   there.
+    @param cmd String from readConsoleCommand()
+    @param val An Array to store numerical values
+    @param maxVals Maximum number of numerical values to store.
+    @return the command letter
+*/
+/**************************************************************************/
+char parseConsoleCommand(String cmd, float val[], int maxVals) {
+  int comma[maxVals]; // find the commas, and there better not be more than
+                      // maxVals!
+  cmd.trim();
+  comma[0] = cmd.indexOf(',');
+  for (int i = 1; i < maxVals; i++) {
+    val[i] = 0.0;
+    comma[i] = 1 + comma[i - 1] + cmd.substring(comma[i - 1] + 1).indexOf(',');
+  }
+  val[0] = (cmd.substring(1, comma[0]))
+               .toFloat(); // extract the values between the commas
+  for (int i = 1; i < maxVals; i++) {
+    if (comma[i] == comma[i - 1]) { // this is the last one so break out
+      val[i] = (cmd.substring(comma[i - 1] + 1)).toFloat();
+      break;
+    } else
+      val[i] = (cmd.substring(comma[i - 1] + 1, comma[i])).toFloat();
+  }
+  return cmd.charAt(0);
 }
