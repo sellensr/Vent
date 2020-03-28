@@ -290,13 +290,6 @@ boolean doConsoleCommand(String cmd) {
     P(p_it); P(" / "); P(p_et); P(" ms\n");
     ret = true;
     break;
-  case 'p': // minimum logging period in seconds
-    if (val[0] > 0.001)
-      logPeriod = min(val[0], 3600.0); // micros() will break if larger
-    P(logPeriod, 3);
-    P(" seconds minimum between log entries.\n");
-    ret = true;
-    break;
   case 'x': // an application command
     PL("The x/X command just prints this message back to the console");
     ret = true;
@@ -310,8 +303,9 @@ boolean doConsoleCommand(String cmd) {
 
 void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
+  P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. T28.2,6.3,1.0\n");
+  P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. T38.2,16.3,1.0\n");
   P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
-  P("  E - set desired patient (E)piratory pressures high/low/trig tol [cm H2O], e.g. T28.2,6.3,1.0\n");
   P("  x - print an (x) message\n");
 }
 
