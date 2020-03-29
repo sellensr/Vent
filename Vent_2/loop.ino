@@ -9,11 +9,9 @@ void loop()
   static unsigned long startExpiration = 0;
   static unsigned long endInspiration = 0;
   static unsigned long endBreath = 0;
-//  static double dP = 0.0;
   static double fracCPAP = 1.0; // wide open
   static double fracPEEP = 1.0; // wide open
   static double fracDual = 0.0; // halfway between, positive opens CPAP, negative opens PEEP
-//  double TA = 0, PA = 0, TV = 0, PV = 0;
   static int phaseTime = 0; // time in phase [ms] signed with flow direction, positive for inspiration, negative for expiration, 0 for transition
   static bool stoppedInspiration = false;
   
@@ -22,17 +20,10 @@ void loop()
   // Test for loop rate
   if (uno.dtAvg() > 100000) PR("Taking longer than 100 ms per loop!\n");
   // Measure current state
-//  if(readPBME){
-//    TA = bmeA.readTemperature();
-//    PA = bmeA.readPressure(); // Pa
-//    TV = bmeV.readTemperature();
-//    PV = bmeV.readPressure(); // Pa
-//  }
   v_batv = uno.getV(A_BAT) * DIV_BAT;
   v_venturiv = uno.getV(A_VENTURI);
-//  dP = dP * 0.9 + (PV - PA - 0.0) * 0.1; 
-//  v_p = dP * 100 / 998 / 9.81;    // cm H2O
   v_p = getP();
+  v_q = getQ();
    
   // check if it is time for the next breath of inspiration!
   endBreath = startBreath + perBreath;  // finish the current breath first

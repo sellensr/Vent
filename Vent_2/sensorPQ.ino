@@ -1,5 +1,5 @@
 #ifdef P_BME280
-void setupP(){
+void setupP(){  // do any setup required for pressure measurement
   unsigned status = bmeA.begin(0x77);  
   PR("bmeA started\n");
   if (!status) {
@@ -21,7 +21,7 @@ void setupP(){
   }
 }
  
-double getP(){
+double getP(){  // return the current value for patient pressure in cm H20
   static double dP = 0.0;
   double TA = 0, PA = 0, TV = 0, PV = 0;
   // Measure current state
@@ -35,21 +35,41 @@ double getP(){
 #endif
 
 #ifdef P_PX137
-void setupP(){
+void setupP(){  // do any setup required for pressure measurement
   
 }
  
-double getP(){
+double getP(){  // return the current value for patient pressure in cm H20
   return 99.99;   
 }
 #endif
 
 #ifdef P_NONE
-void setupP(){
+void setupP(){  // do any setup required for pressure measurement
   
 }
  
-double getP(){
+double getP(){  // return the current value for patient pressure in cm H20
   return 99.99;   
+}
+#endif
+
+#ifdef Q_NONE
+void setupQ(){  // do any setup required for flow measurement
+  
+}
+
+double getQ(){  // return the current value for patient flow in litres / minute
+  return 9999.9;
+}
+#endif
+
+#ifdef Q_PX137
+void setupQ(){  // do any setup required for flow measurement
+  
+}
+
+double getQ(){  // return the current value for patient flow in litres / minute
+  return 999.9;
 }
 #endif

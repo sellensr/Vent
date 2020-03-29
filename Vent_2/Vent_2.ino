@@ -3,13 +3,14 @@
 #include <Adafruit_BME280.h>
 #include <Servo.h>
 
-// define only one source for P
+// define only one source for P or else you will get a redefinition of 'xxx' error
 //#define P_NONE          // there is no patient pressure sensor
 #define P_BME280        // use the paired BME280s as the patient pressure sensors
 //#define P_PX137         // use a PX137 as the patient pressure sensor
 
-// define only one source for Q
-#define Q_PX137         // use a PX137 as the flow sensor
+// define only one source for Q or else you will get a redefinition of 'xxx' error
+#define Q_NONE          // there is no patient flow sensor
+//#define Q_PX137         // use a PX137 as the flow sensor
 
 RWS_UNO uno = RWS_UNO();
 #define PB_DEF 10000    // breathing rate default [ms / breath]
@@ -108,28 +109,8 @@ void setup()
   while(!Serial1 && millis() < 5000);
 
   Serial.print("\n\nRWS Vent_2\n\n");
-//  if(readPBME){
-//    unsigned status = bmeA.begin(0x77);  
-//    PR("bmeA started\n");
-//    if (!status) {
-//        Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
-//        Serial.print("SensorID was: 0x"); Serial.println(bmeA.sensorID(),16);
-//        Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-//        Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-//        Serial.print("        ID of 0x60 represents a BME 280.\n");
-//        Serial.print("        ID of 0x61 represents a BME 680.\n");
-//    }
-//    status = bmeV.begin(0x76);  
-//    if (!status) {
-//        Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
-//        Serial.print("SensorID was: 0x"); Serial.println(bmeV.sensorID(),16);
-//        Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-//        Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-//        Serial.print("        ID of 0x60 represents a BME 280.\n");
-//        Serial.print("        ID of 0x61 represents a BME 680.\n");
-//    }
-//  }
   setupP();
+  setupQ();
   servoDual.attach(11);  // actuates both valve bodies alternately
   servoCPAP.attach(10);  // actuates CPAP valve only
   servoPEEP.attach(9);   // actuates PEEP valve only
