@@ -109,12 +109,21 @@ void loop()
     lastButton = millis();
     if (p_trigEnabled) p_trigEnabled = false;
     else p_trigEnabled = true;
+    // reset alarm conditions
+    v_alarm = VENT_NO_ERROR;
+    v_alarmOffTime = millis();
+    v_alarmOnTime = 0;
+    p_alarm = false;
   }
 
   double osc = sin(2 * 3.14159 * prog);
   v_o2 = 0.21 + osc *0.01;
   v_mv = v_v * v_bpm;
-  v_alarm = 0;
+  if (v_alarm   // there's an alarm on condition 
+      && millis() > v_alarmOnTime + ALARM_DELAY   // that has lasted longer than the delay
+      && millis() < v_alarmOnTime + ALARM_LENGTH + ALARM_DELAY // and hasn't run out of time
+    ) digitalWrite(ALARM_PIN,HIGH);
+  else digitalWrite(ALARM_PIN,LOW);
   if (millis()-lastPrint > 50) {
     lastPrint = millis();
     char sc[200] = {0};
@@ -122,7 +131,7 @@ void loop()
     sprintf(sc, "%s, %5.3f, %5.2f, %5.1f", sc, v_o2, v_p, v_q);
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_ipp, v_ipl, v_it);
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_epp, v_epl, v_et);
-    sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %5u", sc, v_bpm, v_v, v_mv, v_alarm);
+    sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %10lu", sc, v_bpm, v_v, v_mv, v_alarm);
     sprintf(sc, "%s, %2d", sc, v_ie);
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);

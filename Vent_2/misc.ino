@@ -45,6 +45,24 @@ boolean doConsoleCommand(String cmd) {
   int ival = val[0];           // an integer version of the first float arg
   unsigned long logPeriod;
   switch (c) {
+  case 'A': // alarm condition
+    if (val[0] > 0){ 
+      p_alarm = true;
+      if(!v_alarmOnTime) v_alarmOnTime = millis();
+      v_alarm += VENT_EXT_ERROR;
+     }
+    if (val[0] < 0){ 
+      p_alarm = false;
+      v_alarmOffTime = millis();
+      v_alarmOnTime = 0;
+      v_alarm = VENT_NO_ERROR;
+    }
+    P("Alarm set to: ");
+    if(p_alarm) P("True, code: ");
+    else P("False, code: ");
+    PL(v_alarm);
+    ret = true;
+    break;
   case 'E': // Expiratory Pressures
     if (val[0] >= 0) p_eph = min(val[0], 50);
     if (val[1] >= 0) p_epl = min(val[1], 20);

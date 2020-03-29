@@ -18,6 +18,9 @@ RWS_UNO uno = RWS_UNO();
 #define A_BAT A5
 #define DIV_BAT 5.0
 #define A_VENTURI A0
+#define ALARM_PIN 5
+#define ALARM_DELAY 3000  // don't alarm until the condition has lasted this long
+#define ALARM_LENGTH 100  // don't make an alarm sound longer than this
 
 Adafruit_BME280 bmeA, bmeV; // I2C
 
@@ -58,10 +61,12 @@ int v_etr = 0;                // rolling expiration time during current breath [
 double v_bpm = 0.0;           // BPM for last breath
 double v_v = 0.0;             // inspiration volume of last breath [ml]
 double v_mv = 0.0;            // volume per minute averaged over recent breaths [l / min]
-byte v_alarm = 0;             // status code
+unsigned long v_alarm = 0;    // status code, normally VENT_NO_ERROR, VENT_EXT_ERROR if externally imposed
 double v_batv = 0.;           // measured battery voltage, should be over 13 for powered, over 12 for charge remaining
 double v_venturiv = 0.;       // measured venturi voltage
 int v_ie = 0;                 // set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
+unsigned long v_alarmOnTime = 0;
+unsigned long v_alarmOffTime = 0;
 
 // p_ for all elements that are set parameters for desired performance
 double p_iph = 13.0;          // the inspiration pressure upper bound.
@@ -74,6 +79,18 @@ int p_it = PB_DEF * INF_DEF;  // inspiration time setting
 int p_et = PB_DEF - p_it;     // expiration time setting
 bool p_trigEnabled = true;    // enable triggering on pressure limits
 bool p_closeCPAP = false;     // set true to close the CPAP valve, set false for normal running
+bool p_alarm = false;         // set true for an alarm condition imposed externally
+
+#define VENT_NO_ERROR   0b0  ///< There is no Error
+#define VENT_IPL_ERROR  0b1  ///< Inspiration Pressure Low
+#define VENT_IPH_ERROR  0b10  ///< Inspiration Pressure High
+#define VENT_ITS_ERROR  0b100  ///< Inspiration Time Short
+#define VENT_ITL_ERROR  0b1000  ///< Inspiration Time Long
+#define VENT_EPL_ERROR  0b10000  ///< Expiration Pressure Low
+#define VENT_EPH_ERROR  0b100000  ///< Expiration Pressure High
+#define VENT_ETS_ERROR  0b1000000  ///< Expiration Time Short
+#define VENT_ETL_ERROR  0b10000000  ///< Expiration Time Long
+#define VENT_EXT_ERROR  0b1000000000000000  ///< External Error
 
 void setup()
 {
@@ -111,6 +128,10 @@ void setup()
   servoPEEP.write(aMaxPEEP); 
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(ALARM_PIN, OUTPUT);
+  digitalWrite(ALARM_PIN, HIGH);
+  delay(5); // just long enough to make a little squeak
+  digitalWrite(ALARM_PIN, LOW);
   delay(100); 
   if(!plotterMode){
     PR("Serial lines of CSV data at 115200 baud\n");
