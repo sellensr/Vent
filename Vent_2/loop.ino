@@ -66,10 +66,14 @@ void loop()
     fracCPAP = 1.0;
     fracDual = 1.0;
     endInspiration = millis();
-    if(phaseTime > 400){   // no longer in transition phase
+    if(phaseTime > eiTime){   // no longer in transition phase
       v_ie = 1;
       v_ipmax = max(v_p,v_ipmax);
       v_ipmin = min(v_p,v_ipmin);
+      if (v_p < p_ipl){                               // pressure is too low
+        if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+        v_alarm = v_alarm | VENT_IPL_ERROR;           //set the appropriate alarm bit
+      } else v_alarm = v_alarm & ~VENT_IPL_ERROR;     //reset the alarm bit
     }
     v_itr = phaseTime;
   } else {            // exhalation
@@ -81,10 +85,14 @@ void loop()
     fracPEEP = 1.0;
     fracCPAP = 0.0;
     fracDual = -1.0;
-    if(phaseTime < -400){ // no longer in transition phase
+    if(phaseTime < -ieTime){ // no longer in transition phase
       v_ie = -1;
       v_epmax = max(v_p,v_epmax);
       v_epmin = min(v_p,v_epmin);
+      if (v_p < p_epl){                               // pressure is too low
+        if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+        v_alarm = v_alarm | VENT_EPL_ERROR;           //set the appropriate alarm bit
+      } else v_alarm = v_alarm & ~VENT_EPL_ERROR;     //reset the alarm bit
     }
     v_etr = -phaseTime;
   }
@@ -119,11 +127,19 @@ void loop()
   double osc = sin(2 * 3.14159 * prog);
   v_o2 = 0.21 + osc *0.01;
   v_mv = v_v * v_bpm;
-  if (v_alarm   // there's an alarm on condition 
+  if(!v_alarm){
+    if(v_alarmOnTime){    // cancel an alarm that has recovered
+      v_alarmOffTime = millis();
+      v_alarmOnTime = 0;
+    }
+  }
+  if (v_alarm   // there's an alarm on condition code 
       && millis() > v_alarmOnTime + ALARM_DELAY   // that has lasted longer than the delay
       && millis() < v_alarmOnTime + ALARM_LENGTH + ALARM_DELAY // and hasn't run out of time
     ) digitalWrite(ALARM_PIN,HIGH);
-  else digitalWrite(ALARM_PIN,LOW);
+  else{
+    digitalWrite(ALARM_PIN,LOW);
+  }
   if (millis()-lastPrint > 50) {
     lastPrint = millis();
     char sc[200] = {0};
@@ -131,7 +147,7 @@ void loop()
     sprintf(sc, "%s, %5.3f, %5.2f, %5.1f", sc, v_o2, v_p, v_q);
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_ipp, v_ipl, v_it);
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_epp, v_epl, v_et);
-    sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %10lu", sc, v_bpm, v_v, v_mv, v_alarm);
+    sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %lu", sc, v_bpm, v_v, v_mv, v_alarm);
     sprintf(sc, "%s, %2d", sc, v_ie);
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
