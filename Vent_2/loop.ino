@@ -1,3 +1,30 @@
+/**************************************************************************/
+/*!
+  @file loop.ino
+
+  @section intro Introduction
+
+  An Arduino sketch for running tests on an HMRC DIY ventilator. loop tab
+
+  @section author Author
+
+  Written by
+
+  @section license License
+
+  CCBY license
+
+  Code provided only for example purposes. Must not be used for any purpose 
+  critical to life or health, or protection of property.
+*/
+/**************************************************************************/
+/**************************************************************************/
+/*!
+    @brief Control loop of HMRC DIY Ventilator
+    @param none
+    @return none
+*/
+/**************************************************************************/
 void loop()
 {
   // use unsigned long for millis() values, but int for short times so positive/negative differences calculate correctly
@@ -14,7 +41,8 @@ void loop()
   static double fracDual = 0.0; // halfway between, positive opens CPAP, negative opens PEEP
   static int phaseTime = 0; // time in phase [ms] signed with flow direction, positive for inspiration, negative for expiration, 0 for transition
   static bool stoppedInspiration = false;
-  
+
+/*********************UPDATE MEASUREMENTS AND PARAMETERS************************/  
   uno.run();    // keep track of things
   loopConsole();// check for console input
   // Test for loop rate
@@ -24,11 +52,13 @@ void loop()
   v_venturiv = uno.getV(A_VENTURI);
   v_p = getP();
   v_q = getQ();
-   
+
+  
+/********************NEW BREATH?********************************/   
   // check if it is time for the next breath of inspiration!
   endBreath = startBreath + perBreath;  // finish the current breath first
   if( endBreath - millis() > 60000      // we are past the end of expiration
-      || ((v_p > 1.0) && (v_p < p_epl - p_eplTol) && p_trigEnabled && (millis() - startBreath > 250))  
+      || ((v_p > 1.0) && (v_p < p_epl + p_eplTol) && p_trigEnabled && (millis() - startBreath > 250))  
       // we have a pressure and are below inspiration trigger and it's enabled
       ) {
     v_ipp = v_ipmax; v_ipl = v_ipmin; v_ipmax = 0; v_ipmin = 99.99;
@@ -40,15 +70,15 @@ void loop()
     perBreath = p_it + p_et;      // update perBreath at start of each breath
     v_bpm = 60000. / (v_it + v_et); // set from actual times of last breath
   }
-  if ((v_p > 1.0) && (v_p > p_iph + p_iphTol) && p_trigEnabled) // we have a pressure and are above expiration trigger 
-    stoppedInspiration = true;
-  if (v_itr > p_it) stoppedInspiration = true;  // time's up
-  // progress through the breath sequence from 0 to 1.0
+  // progress through the breath sequence from 0 to 1.0 on the timed sequence
   double prog = (millis() - startBreath) / (double) perBreath;
   prog = max(prog,0.0); prog = min(prog,1.0);
-  // calculate something more complicated for the opening
-  if (millis() - startBreath < p_it && !stoppedInspiration
-    ) {   // inhalation
+
+/**************************INSPIRATION PHASE********************************/  
+  if ((v_p > 1.0) && (v_p > p_iph - p_iphTol) && p_trigEnabled) // we have a pressure and are above expiration trigger 
+    stoppedInspiration = true;
+  if (v_itr > p_it) stoppedInspiration = true;  // time's up
+  if (millis() - startBreath < p_it && !stoppedInspiration) {   // inhalation
     if(phaseTime < 0){ 
       startInspiration = millis(); 
       v_ie = 0;
@@ -68,7 +98,10 @@ void loop()
       } else v_alarm = v_alarm & ~VENT_IPL_ERROR;     //reset the alarm bit
     }
     v_itr = phaseTime;
-  } else {            // exhalation
+  } 
+  
+/**************************EXPIRATION PHASE********************************/  
+  else {            // exhalation
     if(phaseTime > 0){
       startExpiration = millis();
       v_ie = 0;
@@ -88,11 +121,15 @@ void loop()
     }
     v_etr = -phaseTime;
   }
+
+/***********************CPAP VALVE CLOSED BY DISPLAY UNIT*******************/
   if(p_closeCPAP){    // force the CPAP closed
     fracCPAP = 0.0;
     fracDual = -1.0;
     v_ie = 0;
   }
+
+/************************TRANSLATE TO SERVO POSITIONS AND CHECK, THEN WRITE*****/  
   // force fractions in range and translate to servo positions
   fracCPAP = max(fracCPAP,0.0); fracCPAP = min(fracCPAP,1.0);
   int posCPAP = aMinCPAP + (aMaxCPAP - aMinCPAP) * fracCPAP;
@@ -104,6 +141,8 @@ void loop()
   servoDual.write(posDual);
   servoCPAP.write(posCPAP);
   servoPEEP.write(posPEEP);
+
+/***************************RESPOND TO BUTTON(S)*******************************/  
   // adjust the breath by button push
   if (millis()-lastButton > 500 && digitalRead(BUTTON_PIN) == LOW) {
     lastButton = millis();
@@ -116,6 +155,7 @@ void loop()
     p_alarm = false;
   }
 
+/*****************************RESPOND TO ALARM CONDITIONS********************/
   double osc = sin(2 * 3.14159 * prog);
   v_o2 = 0.21 + osc *0.01;
   v_mv = v_v * v_bpm;
@@ -132,6 +172,8 @@ void loop()
   else{
     digitalWrite(ALARM_PIN,LOW);
   }
+
+/***********************SEND DATA TO CONSOLE / PLOTTER / DISPLAY UNIT**************/  
   if (millis()-lastPrint > 50) {
     lastPrint = millis();
     char sc[200] = {0};
@@ -147,8 +189,8 @@ void loop()
       PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase");
       if(fracDual > 0) P(p_iph); else P(p_epl);
       PCS(v_p);    // use with Serial plotter to visualize the pressure output
-      PCS(p_iph + p_iphTol);
-      PCS(p_epl - p_eplTol);
+      PCS(p_iph - p_iphTol);
+      PCS(p_epl + p_eplTol);
       PCS(v_itr/1000.);
       PCS(v_etr/1000.);
       PCS(v_ie + 10);

@@ -1,3 +1,31 @@
+/**************************************************************************/
+/*!
+  @file misc.ino
+
+  @section intro Introduction
+
+  An Arduino sketch for running tests on an HMRC DIY ventilator. misc tab
+
+  @section author Author
+
+  Written by
+
+  @section license License
+
+  CCBY license
+
+  Code provided only for example purposes. Must not be used for any purpose 
+  critical to life or health, or protection of property.
+*/
+/**************************************************************************/
+/**************************************************************************/
+/*!
+    @brief Handle console input/output functions on USB and on Serial1 for
+            display unit.
+    @param none
+    @return none
+*/
+/**************************************************************************/
 void loopConsole(){
     // check for lines of user input from the console
   static String ci = "";
@@ -35,6 +63,13 @@ void loopConsole(){
 
 }
 
+/**************************************************************************/
+/*!
+    @brief Respond to console commands
+    @param cmd a String containing the command
+    @return true if successful, false if we couldn't respond properly
+*/
+/**************************************************************************/
 boolean doConsoleCommand(String cmd) {
   // an application specific version that acts the same as the library function
   boolean ret = false;
@@ -115,6 +150,13 @@ boolean doConsoleCommand(String cmd) {
   return ret; // true if we found a command to execute!
 }
 
+/**************************************************************************/
+/*!
+    @brief Show a list of possible commands
+    @param none
+    @return none
+*/
+/**************************************************************************/
 void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
   P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
@@ -146,6 +188,13 @@ boolean readConsoleCommand(String *consoleIn) {
   }
   return false;
 }
+/**************************************************************************/
+/*!
+    @brief Same as readConsoleCommand() except using Serial1
+    @param consoleIn pointer to the String to store the input line.
+    @return true if we got to the end of a line, otherwise false.
+*/
+/**************************************************************************/
 boolean readConsoleCommand1(String *consoleIn) {
   while (Serial1.available()) { // accumulate command string and return true when
                                // completed.
