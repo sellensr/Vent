@@ -3,6 +3,14 @@
 #include <Adafruit_BME280.h>
 #include <Servo.h>
 
+// define only one source for P
+//#define P_NONE          // there is no patient pressure sensor
+#define P_BME280        // use the paired BME280s as the patient pressure sensors
+//#define P_PX137         // use a PX137 as the patient pressure sensor
+
+// define only one source for Q
+#define Q_PX137         // use a PX137 as the flow sensor
+
 RWS_UNO uno = RWS_UNO();
 #define PB_DEF 10000    // breathing rate default [ms / breath]
 #define PB_MAX 10000    // slowest breathing
