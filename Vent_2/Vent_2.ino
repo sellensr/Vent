@@ -45,8 +45,13 @@ RWS_UNO uno = RWS_UNO();
 
 #define IT_MAX 10000    ///< Inspiration time max
 #define ET_MAX 10000    ///< Expiration time max
-#define IT_MIN 500      ///< Inspiration Time min
+#define IT_MIN 500      ///< Inspiration time min
 #define ET_MIN 1000     ///< Expiration time min
+
+#define IP_MAX 40       ///< Inspiration pressure max
+#define EP_MAX 40       ///< Expiration pressure max
+#define IP_MIN 2        ///< Inspiration pressure min
+#define EP_MIN 1        ///< Expiration pressure min
 
 // read the battery state from a voltage divider
 #define A_BAT A5
@@ -71,12 +76,11 @@ int ieTime = 400;   ///< transition between end of inspiration and start of expi
 int eiTime = 400;   ///< transition time between end of expiration phase and start of inspiration phase
 
 // Go to different modes to allow testing
-// use P_NONE at the top of the file instead
-//bool readPBME = true;    ///< set false to allow testing on a machine with no BMEs or to use other P sensors instead
-bool plotterMode = true;///< set true for output visualization using arduino ide plotter mode
-
-// Variables from UI definition + a bit more
+bool plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
+int slowPrint = 20;           ///< set larger than 1 to print data more slowly
+// Global Variables from UI definition + a bit more
 // v_ for all elements that are measured or calculated from actual operations
+// Not necessarily declared in order of output to the display unit. Check the output code.
 double v_o2 = 0.0;            ///< measured instantaneous oxygen volume fraction [0 to 1.0]
 double v_p = 99.9;            ///< current instantaneous pressure [cm H2O]
 double v_q = 0.0;             ///< current instantaneous flow to patient [l/min]
@@ -99,8 +103,8 @@ unsigned long v_alarm = 0;    ///< status code, normally VENT_NO_ERROR, VENT_EXT
 double v_batv = 0.;           ///< measured battery voltage, should be over 13 for powered, over 12 for charge remaining
 double v_venturiv = 0.;       ///< measured venturi voltage
 int v_ie = 0;                 ///< set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
-unsigned long v_alarmOnTime = 0;
-unsigned long v_alarmOffTime = 0;
+unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
+unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
 
 // p_ for all elements that are set parameters for desired performance
 double p_iph = 14.0;          ///< the inspiration pressure upper bound.
@@ -109,21 +113,26 @@ double p_iphTol = 0.5;        ///< difference from p_eph required to trigger sta
 double p_eph = 20.0;          ///< the expiration pressure upper bound.
 double p_epl = 7.0;           ///< the expiration pressure lower bound -- PEEP setting.
 double p_eplTol = 0.5;        ///< difference from p_epl required to trigger start of new breath if P < p_epl + p_eplTol or alarm if beyond
-int p_it = PB_DEF * INF_DEF;  ///< inspiration time setting
-int p_et = PB_DEF - p_it;     ///< expiration time setting
+int p_it = PB_DEF * INF_DEF;  ///< inspiration time setting, high/low limits
+int p_ith = IT_MAX;
+int p_itl = IT_MIN;
+int p_et = PB_DEF - p_it;     ///< expiration time setting, high/low limits
+int p_eth = ET_MAX;
+int p_etl = ET_MIN;
 bool p_trigEnabled = true;    ///< enable triggering on pressure limits
 bool p_closeCPAP = false;     ///< set true to close the CPAP valve, set false for normal running
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
 
-#define VENT_NO_ERROR   0b0  ///< There is no Error
-#define VENT_IPL_ERROR  0b1  ///< Inspiration Pressure Low
-#define VENT_IPH_ERROR  0b10  ///< Inspiration Pressure High
-#define VENT_ITS_ERROR  0b100  ///< Inspiration Time Short
-#define VENT_ITL_ERROR  0b1000  ///< Inspiration Time Long
-#define VENT_EPL_ERROR  0b10000  ///< Expiration Pressure Low
-#define VENT_EPH_ERROR  0b100000  ///< Expiration Pressure High
-#define VENT_ETS_ERROR  0b1000000  ///< Expiration Time Short
-#define VENT_ETL_ERROR  0b10000000  ///< Expiration Time Long
+// stackable error codes that will fit into v_alarm
+#define VENT_NO_ERROR   0b0                 ///< There is no Error
+#define VENT_IPL_ERROR  0b0000000000000001  ///< Inspiration Pressure Low
+#define VENT_IPH_ERROR  0b0000000000000010  ///< Inspiration Pressure High
+#define VENT_ITS_ERROR  0b0000000000000100  ///< Inspiration Time Short
+#define VENT_ITL_ERROR  0b0000000000001000  ///< Inspiration Time Long
+#define VENT_EPL_ERROR  0b0000000000010000  ///< Expiration Pressure Low
+#define VENT_EPH_ERROR  0b0000000000100000  ///< Expiration Pressure High
+#define VENT_ETS_ERROR  0b0000000001000000  ///< Expiration Time Short
+#define VENT_ETL_ERROR  0b0000000010000000  ///< Expiration Time Long
 #define VENT_EXT_ERROR  0b1000000000000000  ///< External Error
 
 /**************************************************************************/

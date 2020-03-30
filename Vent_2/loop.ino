@@ -69,7 +69,24 @@ void loop()
     stoppedInspiration = false;    // hasn't gone over pressure yet
     perBreath = p_it + p_et;      // update perBreath at start of each breath
     v_bpm = 60000. / (v_it + v_et); // set from actual times of last breath
-  }
+    // test for v_it, v_et error conditions
+    if (v_it < p_itl){                              // inspiration time is too short
+      if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+      v_alarm = v_alarm | VENT_ITS_ERROR;           // set the appropriate alarm bit
+    } else v_alarm = v_alarm & ~VENT_ITS_ERROR;     // reset the alarm bit
+    if (v_it > p_ith){                              // inspiration time is too long
+      if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+      v_alarm = v_alarm | VENT_ITL_ERROR;           // set the appropriate alarm bit
+    } else v_alarm = v_alarm & ~VENT_ITL_ERROR;     // reset the alarm bit
+    if (v_et < p_etl){                              // expiration time is too short
+      if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+      v_alarm = v_alarm | VENT_ETS_ERROR;           // set the appropriate alarm bit
+    } else v_alarm = v_alarm & ~VENT_ETS_ERROR;     // reset the alarm bit
+    if (v_et > p_eth){                              // expiration time is too long
+      if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+      v_alarm = v_alarm | VENT_ETL_ERROR;           // set the appropriate alarm bit
+    } else v_alarm = v_alarm & ~VENT_ETL_ERROR;     // reset the alarm bit
+   }
   // progress through the breath sequence from 0 to 1.0 on the timed sequence
   double prog = (millis() - startBreath) / (double) perBreath;
   prog = max(prog,0.0); prog = min(prog,1.0);
@@ -96,6 +113,10 @@ void loop()
         if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
         v_alarm = v_alarm | VENT_IPL_ERROR;           //set the appropriate alarm bit
       } else v_alarm = v_alarm & ~VENT_IPL_ERROR;     //reset the alarm bit
+      if (v_p > p_iph){                               // pressure is too high
+        if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+        v_alarm = v_alarm | VENT_IPH_ERROR;           //set the appropriate alarm bit
+      } else v_alarm = v_alarm & ~VENT_IPH_ERROR;     //reset the alarm bit
     }
     v_itr = phaseTime;
   } 
@@ -118,6 +139,10 @@ void loop()
         if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
         v_alarm = v_alarm | VENT_EPL_ERROR;           //set the appropriate alarm bit
       } else v_alarm = v_alarm & ~VENT_EPL_ERROR;     //reset the alarm bit
+      if (v_p > p_eph){                               // pressure is too high
+        if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
+        v_alarm = v_alarm | VENT_EPH_ERROR;           //set the appropriate alarm bit
+      } else v_alarm = v_alarm & ~VENT_EPH_ERROR;     //reset the alarm bit
     }
     v_etr = -phaseTime;
   }
@@ -143,22 +168,22 @@ void loop()
   servoPEEP.write(posPEEP);
 
 /***************************RESPOND TO BUTTON(S)*******************************/  
-  // adjust the breath by button push
   if (millis()-lastButton > 500 && digitalRead(BUTTON_PIN) == LOW) {
     lastButton = millis();
-    if (p_trigEnabled) p_trigEnabled = false;
+    if (p_trigEnabled) p_trigEnabled = false; // toggle trigger mode
     else p_trigEnabled = true;
-    // reset alarm conditions
-    v_alarm = VENT_NO_ERROR;
+    v_alarm = VENT_NO_ERROR;  // reset alarm conditions
     v_alarmOffTime = millis();
     v_alarmOnTime = 0;
     p_alarm = false;
   }
 
-/*****************************RESPOND TO ALARM CONDITIONS********************/
+/*****************************UPDATE VALUES FROM CURRENT STATE****************/
   double osc = sin(2 * 3.14159 * prog);
   v_o2 = 0.21 + osc *0.01;
   v_mv = v_v * v_bpm;
+
+/*****************************RESPOND TO ALARM CONDITIONS********************/
   if(!v_alarm){
     if(v_alarmOnTime){    // cancel an alarm that has recovered
       v_alarmOffTime = millis();
@@ -174,7 +199,7 @@ void loop()
   }
 
 /***********************SEND DATA TO CONSOLE / PLOTTER / DISPLAY UNIT**************/  
-  if (millis()-lastPrint > 50) {
+  if (millis()-lastPrint > 50 * slowPrint) {  // 50 ms for 20 Hz, or slowed down for debug
     lastPrint = millis();
     char sc[200] = {0};
     sprintf(sc, "%10lu, %5.3f, %5.2f, %5.2f, %5.2f", millis(), prog, fracCPAP, fracPEEP, fracDual);
