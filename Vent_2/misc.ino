@@ -128,6 +128,14 @@ boolean doConsoleCommand(String cmd) {
     P(p_iph); P(" / "); P(p_ipl);  P(" / "); P(p_iphTol); P(" cm H2O\n");
     ret = true;
     break;
+  case 'P': // plotter mode
+    if (val[0] > 0) p_plotterMode = true;
+    if (val[0] < 0) p_plotterMode = false;
+    P("Plotter Mode set to: ");
+    if(p_plotterMode) P("True\n");
+    else P("False\n");
+    ret = true;
+    break;
   case 'R': // Run Mode
     p_closeCPAP = false;
     PL("Taking CPAP valve to run mode.");
@@ -173,6 +181,7 @@ void listConsoleCommands() {
   P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
   P("  i - set desired patient (i)nspiratory times target, high/low limits [ms], e.g. i2000,3500,1200\n");
   P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
+  P("  P - set plotter mode, positive for plotter mode on, negative for plotter mode off, e.g. P1\n");
   P("  R - set to normal (R)un mode, e.g. R\n");
   P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
   P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");

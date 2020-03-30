@@ -79,9 +79,9 @@ RWS_UNO uno = RWS_UNO();
 // Servo geometry will depend on the physical assembly of each unit and variability between servos.
 // These values will have to be set for each individual machine after final assembly.
 Servo servoCPAP, servoPEEP, servoDual;  ///< create servo object to control a servo
-int aMinCPAP = 91, aMaxCPAP = 125;      ///< independent CPAP valve position settings [servo degrees closed (Min) and open (Max)]
-int aMinPEEP = 84, aMaxPEEP = 50;       ///< independent PEEP valve position settings [servo degrees closed (Min) and open (Max)]
-int aCloseCPAP = 113, aClosePEEP = 79;  ///< dual valve position settings for fully closed [servo degrees]
+int aMinCPAP = 60, aMaxCPAP = 90;      ///< independent CPAP valve position settings [servo degrees closed (Min) and open (Max)]
+int aMinPEEP = 60, aMaxPEEP = 90;       ///< independent PEEP valve position settings [servo degrees closed (Min) and open (Max)]
+int aCloseCPAP = 70, aClosePEEP = 99;  ///< dual valve position settings for fully closed [servo degrees]
 double aMid = (aCloseCPAP + aClosePEEP) / 2.0;
 
 // Detecting the time to end a phase does not instantly open valves and change flows.
@@ -90,7 +90,6 @@ int ieTime = 400;   ///< transition between end of inspiration and start of expi
 int eiTime = 400;   ///< transition time between end of expiration phase and start of inspiration phase
 
 // Go to different modes to allow testing
-bool plotterMode = true;     ///< set true for output visualization using arduino ide plotter mode
 int slowPrint = 1;           ///< set larger than 1 to print data more slowly
 
 // Global Variables from UI definition + a bit more
@@ -137,9 +136,10 @@ int p_itl = IT_MIN;
 int p_et = PB_DEF - p_it;     ///< expiration time setting, high/low limits
 int p_eth = ET_MAX;
 int p_etl = ET_MIN;
-bool p_trigEnabled = true;    ///< enable triggering on pressure limits
+bool p_trigEnabled = false;   ///< enable triggering on pressure limits
 bool p_closeCPAP = false;     ///< set true to close the CPAP valve, set false for normal running
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
+bool p_plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
 
 // stackable error codes that will fit into v_alarm
 #define VENT_NO_ERROR   0b0                 ///< There is no Error
@@ -182,7 +182,7 @@ void setup()
   delay(5); ///< just long enough to make a little squeak
   digitalWrite(ALARM_PIN, LOW);
   delay(100); 
-  if(!plotterMode){
+  if(!p_plotterMode){
     PR("Serial lines of CSV data at 115200 baud\n");
     PR("  millis(),  prog,  CPAP,  PEEP,  Dual,  v_o2,   v_p,   v_q, v_ipp, v_ipl,  v_it, v_epp, v_epl,  v_et, v_bpm,   v_v,   v_mv, v_alarm, v_ie, plus other stuff\n");
   }

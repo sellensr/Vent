@@ -219,7 +219,7 @@ void loop()
     sprintf(sc, "%s, %2d", sc, v_ie);
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
-    if(plotterMode){
+    if(p_plotterMode){
       PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase, v_q/10, v_vr/100, v_mv, v_bpms");
       if(fracDual > 0) P(p_iph); else P(p_epl);
       PCS(v_p);    // use with Serial plotter to visualize the pressure output
