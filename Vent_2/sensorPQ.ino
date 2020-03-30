@@ -79,6 +79,8 @@ void setupP(){  // do any setup required for pressure measurement
 }
  
 double getP(){  // return the current value for patient pressure in cm H20
+  double v = uno.getV(A_PX137);
+  v_px137v = v_px137v * 0.9 + v * 0.1; 
   return 99.99;   
 }
 #endif
@@ -123,6 +125,10 @@ void setupQ(){  // do any setup required for flow measurement
 }
 
 double getQ(){  // return the current value for patient flow in litres / minute
-  return 999.9;
+  double v = uno.getV(A_VENTURI);
+  v_venturiv = v_venturiv * 0.99 + v * 0.01; 
+  double q = pow(abs(v_venturiv - OFFSET_VENTURI),0.5) * SCALE_VENTURI;
+  // need calibration calculation here to convert voltage to flow
+  return q;
 }
 #endif

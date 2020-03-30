@@ -27,15 +27,27 @@
 /**************************************************************************/
 #include "RWS_UNO.h"
 #include <Servo.h>
-
+/****************SET INSTRUMENTATION TYPES HERE****************************/
 // define only one source for P or else you will get a redefinition of 'xxx' error
-//#define P_NONE          ///< there is no patient pressure sensor
-#define P_BME280        ///< use the paired BME280s as the patient pressure sensors
+#define P_NONE          ///< there is no patient pressure sensor
+//#define P_BME280        ///< use the paired BME280s as the patient pressure sensors
 //#define P_PX137         ///< use a PX137 as the patient pressure sensor
 
 // define only one source for Q or else you will get a redefinition of 'xxx' error
-#define Q_NONE          ///< there is no patient flow sensor
-//#define Q_PX137         ///< use a PX137 as the flow sensor
+//#define Q_NONE          ///< there is no patient flow sensor
+#define Q_PX137         ///< use a PX137 as the flow sensor
+
+/***************SET PINS HERE TO MATCH HARDWARE CONFIGURATION**************/
+// read the battery state from a voltage divider
+#define A_BAT A5
+#define DIV_BAT 5.0
+#define A_VENTURI A4
+#define SCALE_VENTURI 10.0 ///< (l/min) / volt^0.5
+#define OFFSET_VENTURI 1.26 ///< volts at zero differential pressure
+#define A_PX137 A1
+#define ALARM_PIN 5
+
+
 
 RWS_UNO uno = RWS_UNO();
 #define PB_DEF 10000    ///< breathing rate default [ms / breath]
@@ -53,12 +65,6 @@ RWS_UNO uno = RWS_UNO();
 #define IP_MIN 2        ///< Inspiration pressure min
 #define EP_MIN 1        ///< Expiration pressure min
 
-// read the battery state from a voltage divider
-#define A_BAT A5
-#define DIV_BAT 5.0
-#define A_VENTURI A0
-#define A_PX137 A1
-#define ALARM_PIN 5
 #define ALARM_DELAY 3000  ///< don't alarm until the condition has lasted this long
 #define ALARM_LENGTH 100  ///< don't make an alarm sound longer than this
 
@@ -77,8 +83,9 @@ int ieTime = 400;   ///< transition between end of inspiration and start of expi
 int eiTime = 400;   ///< transition time between end of expiration phase and start of inspiration phase
 
 // Go to different modes to allow testing
-bool plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
-int slowPrint = 20;           ///< set larger than 1 to print data more slowly
+bool plotterMode = true;     ///< set true for output visualization using arduino ide plotter mode
+int slowPrint = 1;           ///< set larger than 1 to print data more slowly
+
 // Global Variables from UI definition + a bit more
 // v_ for all elements that are measured or calculated from actual operations
 // Not necessarily declared in order of output to the display unit. Check the output code.

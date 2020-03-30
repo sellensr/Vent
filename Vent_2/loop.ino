@@ -49,8 +49,6 @@ void loop()
   if (uno.dtAvg() > 100000) PR("Taking longer than 100 ms per loop!\n");
   // Measure current state
   v_batv = uno.getV(A_BAT) * DIV_BAT;
-  v_venturiv = uno.getV(A_VENTURI);
-  v_px137v = uno.getV(A_PX137);
   v_p = getP();
   v_q = getQ();
 
@@ -220,6 +218,8 @@ void loop()
       PCS(v_itr/1000.);
       PCS(v_etr/1000.);
       PCS(v_ie + 10);
+      PCS(v_venturiv,4);
+      PCS(v_q);
       PL();
     } else PR(sc);   // print the whole string to the console
   }
