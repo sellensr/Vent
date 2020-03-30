@@ -82,7 +82,7 @@ double getP(){  // return the current value for patient pressure in cm H20
   double v = uno.getV(A_PX137); // instantaneous voltage
   double w = 0.1; // weighting factor for exponential smoothing
   v_px137v = v_px137v * (1-w) + v * w; // smoothed voltage
-  double p = (v_px137v - OFFSET_PX137) * PSCALE_PX137
+  double p = (v_px137v - OFFSET_PX137) * PSCALE_PX137;
   return p;   
 }
 #endif

@@ -64,10 +64,14 @@ void loop()
     v_epp = v_epmax; v_epl = v_epmin; v_epmax = 0; v_epmin = 99.99;
     v_it = v_itr;  v_itr = 0; // store times for last breath
     v_et = v_etr;  v_etr = 0;
-    startBreath = millis();       // start a new breath
-    stoppedInspiration = false;    // hasn't gone over pressure yet
     perBreath = p_it + p_et;      // update perBreath at start of each breath
     v_bpm = 60000. / (v_it + v_et); // set from actual times of last breath
+    v_v  = v_vr;   v_vr = 0;  // restart rolling estimate
+    double mv = v_v * v_bpm / 1000.; // the latest minute volume
+    if(v_mv > 0) v_mv = 0.5 * mv + 0.5 * v_mv;    // smoothed
+    else v_mv = mv;
+    startBreath = millis();       // start a new breath
+    stoppedInspiration = false;    // hasn't gone over pressure yet
     // test for v_it, v_et error conditions
     if (v_it < p_itl){                              // inspiration time is too short
       if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
@@ -108,6 +112,9 @@ void loop()
       v_ie = 1;
       v_ipmax = max(v_p,v_ipmax);
       v_ipmin = min(v_p,v_ipmin);
+      double newVol = v_q * 1000. / 60.;  // convert to ml/s
+      newVol *= uno.dt() / 1000000.;      // dt is in microseconds since last time through
+      v_vr += newVol;
       if (v_p < p_ipl){                               // pressure is too low
         if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
         v_alarm = v_alarm | VENT_IPL_ERROR;           //set the appropriate alarm bit
@@ -180,7 +187,6 @@ void loop()
 /*****************************UPDATE VALUES FROM CURRENT STATE****************/
   double osc = sin(2 * 3.14159 * prog);
   v_o2 = 0.21 + osc *0.01;
-  v_mv = v_v * v_bpm;
 
 /*****************************RESPOND TO ALARM CONDITIONS********************/
   if(!v_alarm){
@@ -210,7 +216,7 @@ void loop()
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
     if(plotterMode){
-      PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase");
+      PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase, v_q/10, v_vr/100, v_mv, v_bpm");
       if(fracDual > 0) P(p_iph); else P(p_epl);
       PCS(v_p);    // use with Serial plotter to visualize the pressure output
       PCS(p_iph - p_iphTol);
@@ -218,8 +224,10 @@ void loop()
       PCS(v_itr/1000.);
       PCS(v_etr/1000.);
       PCS(v_ie + 10);
-      PCS(v_venturiv*10);
-      PCS(v_q);
+      PCS(v_q/10);
+      PCS(v_vr/100);
+      PCS(v_mv);
+      PCS(v_bpm);
       PL();
     } else PR(sc);   // print the whole string to the console
   }

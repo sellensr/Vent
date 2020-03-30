@@ -29,8 +29,8 @@
 #include <Servo.h>
 /****************SET INSTRUMENTATION TYPES HERE****************************/
 // define only one source for P or else you will get a redefinition of 'xxx' error
-#define P_NONE          ///< there is no patient pressure sensor
-//#define P_BME280        ///< use the paired BME280s as the patient pressure sensors
+//#define P_NONE          ///< there is no patient pressure sensor
+#define P_BME280        ///< use the paired BME280s as the patient pressure sensors
 //#define P_PX137         ///< use a PX137 as the patient pressure sensor
 
 // define only one source for Q or else you will get a redefinition of 'xxx' error
@@ -41,14 +41,17 @@
 // read the battery state from a voltage divider
 #define A_BAT A5
 #define DIV_BAT 5.0
-#define A_VENTURI A4
+// read the venturi as below
+#define A_VENTURI A0
 #define QSCALE_VENTURI 11.28  ///< (l/min) / cmH2O^0.5 to get Q = QSCALE_VENTURI * pow(p,0.5)
 #define PSCALE_VENTURI 26.01  ///< cmH20 / volt for venturi pressure sensor
 #define OFFSET_VENTURI 1.26   ///< volts at zero differential pressure on venturi
+// read the PX137 for patient pressure as below
+#define A_PX137 A1
 #define PSCALE_PX137 94.31    ///< cmH20 / volt for PX137 patient pressure sensor
 #define OFFSET_PX137 1.26     ///< volts at zero patient pressure
+// other hardware and display settings below
 #define MINQ_VENTURI 1.0  ///< minimum litre/min to display as non-zero
-#define A_PX137 A1
 #define ALARM_PIN 5
 
 
@@ -110,6 +113,7 @@ int v_et = 0;                 ///< expiration time during last breath [ms]
 int v_etr = 0;                ///< rolling expiration time during current breath [ms]
 double v_bpm = 0.0;           ///< BPM for last breath
 double v_v = 0.0;             ///< inspiration volume of last breath [ml]
+double v_vr = 0.0;             ///< rolling inspiration volume of current breath [ml]
 double v_mv = 0.0;            ///< volume per minute averaged over recent breaths [l / min]
 unsigned long v_alarm = 0;    ///< status code, normally VENT_NO_ERROR, VENT_EXT_ERROR if externally imposed
 double v_batv = 0.;           ///< measured battery voltage, should be over 13 for powered, over 12 for charge remaining
