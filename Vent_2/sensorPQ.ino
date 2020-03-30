@@ -81,7 +81,7 @@ void setupP(){  // do any setup required for pressure measurement
 double getP(){  // return the current value for patient pressure in cm H20
   double v = uno.getV(A_PX137);
   v_px137v = v_px137v * 0.9 + v * 0.1; 
-  return 99.99;   
+  return 0.42;   
 }
 #endif
 
@@ -91,7 +91,7 @@ void setupP(){  // do any setup required for pressure measurement
 }
  
 double getP(){  // return the current value for patient pressure in cm H20
-  return 99.99;   
+  return 0.42;   
 }
 #endif
 
@@ -115,7 +115,7 @@ void setupQ(){  // do any setup required for flow measurement
 */
 /**************************************************************************/
 double getQ(){  // return the current value for patient flow in litres / minute
-  return 9999.9;
+  return 0.42;
 }
 #endif
 
@@ -126,9 +126,11 @@ void setupQ(){  // do any setup required for flow measurement
 
 double getQ(){  // return the current value for patient flow in litres / minute
   double v = uno.getV(A_VENTURI);
-  v_venturiv = v_venturiv * 0.99 + v * 0.01; 
+  double w = 0.1;
+  v_venturiv = v_venturiv * (1-w) + v * w; 
   double q = pow(abs(v_venturiv - OFFSET_VENTURI),0.5) * SCALE_VENTURI;
-  // need calibration calculation here to convert voltage to flow
+  // do this supression somewhere else like at the display
+  // if(q < MINQ_VENTURI) q = 0; // supress small noisy values for optics!
   return q;
 }
 #endif

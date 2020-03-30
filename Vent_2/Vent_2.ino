@@ -44,6 +44,7 @@
 #define A_VENTURI A4
 #define SCALE_VENTURI 10.0 ///< (l/min) / volt^0.5
 #define OFFSET_VENTURI 1.26 ///< volts at zero differential pressure
+#define MINQ_VENTURI 1.0  ///< minimum litre/min to display as non-zero
 #define A_PX137 A1
 #define ALARM_PIN 5
 
@@ -90,7 +91,7 @@ int slowPrint = 1;           ///< set larger than 1 to print data more slowly
 // v_ for all elements that are measured or calculated from actual operations
 // Not necessarily declared in order of output to the display unit. Check the output code.
 double v_o2 = 0.0;            ///< measured instantaneous oxygen volume fraction [0 to 1.0]
-double v_p = 99.9;            ///< current instantaneous pressure [cm H2O]
+double v_p = 0.42;            ///< current instantaneous pressure [cm H2O]
 double v_q = 0.0;             ///< current instantaneous flow to patient [l/min]
 double v_ipp = 99.9;          ///< highest pressure during inspiration phase of last breath [cm H2o]
 double v_ipl = 99.9;          ///< lowest pressure during inspiration phase of last breath [cm H2O]

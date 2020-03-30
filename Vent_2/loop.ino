@@ -218,7 +218,7 @@ void loop()
       PCS(v_itr/1000.);
       PCS(v_etr/1000.);
       PCS(v_ie + 10);
-      PCS(v_venturiv,4);
+      PCS(v_venturiv*10);
       PCS(v_q);
       PL();
     } else PR(sc);   // print the whole string to the console
