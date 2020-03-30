@@ -57,6 +57,7 @@ RWS_UNO uno = RWS_UNO();
 #define A_BAT A5
 #define DIV_BAT 5.0
 #define A_VENTURI A0
+#define A_PX137 A1
 #define ALARM_PIN 5
 #define ALARM_DELAY 3000  ///< don't alarm until the condition has lasted this long
 #define ALARM_LENGTH 100  ///< don't make an alarm sound longer than this
@@ -102,6 +103,7 @@ double v_mv = 0.0;            ///< volume per minute averaged over recent breath
 unsigned long v_alarm = 0;    ///< status code, normally VENT_NO_ERROR, VENT_EXT_ERROR if externally imposed
 double v_batv = 0.;           ///< measured battery voltage, should be over 13 for powered, over 12 for charge remaining
 double v_venturiv = 0.;       ///< measured venturi voltage
+double v_px137v = 0.;       ///< measured venturi voltage
 int v_ie = 0;                 ///< set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
 unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
 unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared

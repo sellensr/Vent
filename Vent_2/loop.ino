@@ -50,6 +50,7 @@ void loop()
   // Measure current state
   v_batv = uno.getV(A_BAT) * DIV_BAT;
   v_venturiv = uno.getV(A_VENTURI);
+  v_px137v = uno.getV(A_PX137);
   v_p = getP();
   v_q = getQ();
 
