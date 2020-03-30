@@ -112,6 +112,7 @@ double v_epmin = 99.9;        ///< lowest pressure so far during this expiration
 int v_et = 0;                 ///< expiration time during last breath [ms]
 int v_etr = 0;                ///< rolling expiration time during current breath [ms]
 double v_bpm = 0.0;           ///< BPM for last breath
+double v_bpms = 0.0;          ///< BPM averaged over recent breaths
 double v_v = 0.0;             ///< inspiration volume of last breath [ml]
 double v_vr = 0.0;             ///< rolling inspiration volume of current breath [ml]
 double v_mv = 0.0;            ///< volume per minute averaged over recent breaths [l / min]
