@@ -1,10 +1,11 @@
 /**************************************************************************/
 /*!
-  @file sensorPQ.ino
+  @file CalVoltages.ino
 
   @section intro Introduction
 
-  An Arduino sketch for running tests on an HMRC DIY ventilator. sensorPQ tab.
+  An Arduino sketch for displaying calibration values for the instrumentation on the 
+  HMRC DIY ventilator. sensorPQ tab.
   Provides functions to measure patient pressure and flow rate.
 
   @section author Author

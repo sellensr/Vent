@@ -1,17 +1,12 @@
 /**************************************************************************/
 /*!
-  @file Vent_2.ino
+  @file CalVoltages.ino
 
   @section intro Introduction
 
-  An Arduino sketch for running tests on an HMRC DIY ventilator.
-
-  For a sense of proportion, 20 cm H2O is about 2 kPa, well within normal barometric
-  pressure variation. 20 cm H20 is about 170 metres of elevation in air, so all of the 
-  operating conditions we are contemplating for our CPAPs are within normal absolute 
-  pressures considered when they were designed and approved for patient use.
-
-  
+  An Arduino sketch for displaying calibration values for the instrumentation on the 
+  HMRC DIY ventilator. 
+ 
 
   @section author Author
 
