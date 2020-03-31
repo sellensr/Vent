@@ -63,6 +63,10 @@ void loop()
     v_pp = v_pmax; v_pl = v_pmin; v_pmax = 0; v_pmin = 99.99;
     v_ipp = v_ipmax; v_ipl = v_ipmin; v_ipmax = 0; v_ipmin = 99.99;
     v_epp = v_epmax; v_epl = v_epmin; v_epmax = 0; v_epmin = 99.99;
+
+/**************UGLY UGLY FIX LATER**************************/
+v_epl = v_pl; v_ipp = v_pp;
+
     v_it = v_itr;  v_itr = 0; // store times for last breath
     v_et = v_etr;  v_etr = 0;
     perBreath = p_it + p_et;      // update perBreath at start of each breath
