@@ -233,7 +233,8 @@ v_epl = v_pl; v_ipp = v_pp;
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_ipp, v_ipl, v_it);
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_epp, v_epl, v_et);
     sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %lu", sc, v_bpm, v_v, v_mv, v_alarm);
-    sprintf(sc, "%s, %2d, %5.2f, %5.2f", sc, v_ie, v_pp, v_pl);
+    sprintf(sc, "%s, %2d", sc, v_ie);
+//    sprintf(sc, "%s, %5.2f, %5.2f", sc, v_pp, v_pl);
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
     if(p_printConsole){
