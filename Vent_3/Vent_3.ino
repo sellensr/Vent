@@ -40,19 +40,23 @@
 //#define Q_NONE          ///< there is no patient flow sensor
 #define Q_PX137         ///< use a PX137 as the flow sensor
 
+// define only one hardware prototype -- config details to be resolved for production
+//#define YGK_MCL       ///< McLaughlin Hall Prototype
+#define YGK_RWS       ///< Rick Sellens Prototype
+
 /***************SET PINS HERE TO MATCH HARDWARE CONFIGURATION**************/
 // read the battery state from a voltage divider
-#define A_BAT A5
+#define A_BAT A3
 #define DIV_BAT 5.0
 // read the venturi as below
-#define A_VENTURI A0
+#define A_VENTURI A5
 #define QSCALE_VENTURI 11.28  ///< (l/min) / cmH2O^0.5 to get Q = QSCALE_VENTURI * pow(p,0.5)
-#define PSCALE_VENTURI 26.01  ///< cmH20 / volt for venturi pressure sensor
-#define OFFSET_VENTURI 1.26   ///< volts at zero differential pressure on venturi
+#define PSCALE_VENTURI 23.53  ///< cmH20 / volt for venturi pressure sensor
+#define OFFSET_VENTURI 1.24   ///< volts at zero differential pressure on venturi
 // read the PX137 for patient pressure as below
-#define A_PX137 A1
-#define PSCALE_PX137 94.31    ///< cmH20 / volt for PX137 patient pressure sensor
-#define OFFSET_PX137 1.26     ///< volts at zero patient pressure
+#define A_PX137 A4
+#define PSCALE_PX137 87.0    ///< cmH20 / volt for PX137 patient pressure sensor
+#define OFFSET_PX137 1.27     ///< volts at zero patient pressure
 // other hardware and display settings below
 #define MINQ_VENTURI 1.0  ///< minimum litre/min to display as non-zero
 #define ALARM_PIN 5
@@ -82,12 +86,18 @@ RWS_UNO uno = RWS_UNO();
 // Servo geometry will depend on the physical assembly of each unit and variability between servos.
 // These values will have to be set for each individual machine after final assembly.
 Servo servoCPAP, servoPEEP, servoDual;  ///< create servo object to control a servo
+
 // These are the settings for the 2020-03-30 configuration on Rick's Board
-// int aMinCPAP = 22, aMaxCPAP = 52;
-// int aMinPEEP = 169, aMaxPEEP = 139;
-// int aCloseCPAP = 66, aClosePEEP = 98;
-int aMinCPAP = 22, aMaxCPAP = 52;      ///< independent CPAP valve position settings [servo degrees closed (Min) and open (Max)]
-int aMinPEEP = 169, aMaxPEEP = 139;       ///< independent PEEP valve position settings [servo degrees closed (Min) and open (Max)]
+#ifdef YGK_RWS
+ int aMinCPAP = 22, aMaxCPAP = 52;
+ int aMinPEEP = 169, aMaxPEEP = 139;
+#endif
+
+// These are the settings for the 2020-03-31 configuration on the McLaughlin Board
+#ifdef YGK_MCL
+ int aMinCPAP = 130, aMaxCPAP = 180;
+ int aMinPEEP = 90, aMaxPEEP = 140;
+#endif
 int aCloseCPAP = 66, aClosePEEP = 98;  ///< dual valve position settings for fully closed [servo degrees]
 double aMid = (aCloseCPAP + aClosePEEP) / 2.0;
 
@@ -182,12 +192,12 @@ void setup()
   Serial.print("\n\nRWS Vent_2\n\n");
   setupP();
   setupQ();
-  servoDual.attach(11);  ///< actuates both valve bodies alternately
-  servoCPAP.attach(10);  ///< actuates CPAP valve only
-  servoPEEP.attach(9);   ///< actuates PEEP valve only
+  servoDual.attach(9);    ///< actuates both valve bodies alternately 9
+  servoPEEP.attach(10);   ///< actuates PEEP valve only 10
+  servoCPAP.attach(11);   ///< actuates CPAP valve only 11
   servoDual.write(aMid);
-  servoCPAP.write(aMaxCPAP);  
   servoPEEP.write(aMaxPEEP); 
+  servoCPAP.write(aMaxCPAP);  
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(ALARM_PIN, OUTPUT);
