@@ -55,7 +55,9 @@ void setupP(){  // do any setup required for pressure measurement
  
 /**************************************************************************/
 /*!
-    @brief Get a new value for patient pressure
+    @brief Get a new value for patient pressure. Be sure to use pull up
+    resistors of about 10K on both SDA and SCL, especially if lines get
+    longer or stray close to things like servo motors!
     @param none
     @return the current value for patient pressure in cm H20
 */
@@ -68,6 +70,7 @@ double getP(){  // return the current value for patient pressure in cm H20
   PA = bmeA.readPressure(); // Pa
   TV = bmeV.readTemperature();
   PV = bmeV.readPressure(); // Pa
+  //P(PA);PCSL(PV);
   dP = dP * 0.9 + (PV - PA - 0.0) * 0.1; 
   return dP * 100 / 998 / 9.81;    // cm H2O   
 }

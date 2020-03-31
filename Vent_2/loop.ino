@@ -58,7 +58,7 @@ void loop()
   endBreath = startBreath + perBreath;  // finish the current breath first
   if( endBreath - millis() > 60000      // we are past the end of expiration
       || ((v_p > 1.0) && (v_p < p_epl + p_eplTol) && p_trigEnabled && (millis() - startBreath > 250))  
-      // we have a pressure and are below inspiration trigger and it's enabled
+      // we have a pressure and are below inspiration trigger and it's enabled and it's not the very beginning of inspiration
       ) {
     v_ipp = v_ipmax; v_ipl = v_ipmin; v_ipmax = 0; v_ipmin = 99.99;
     v_epp = v_epmax; v_epl = v_epmin; v_epmax = 0; v_epmin = 99.99;
@@ -160,7 +160,15 @@ void loop()
 /***********************CPAP VALVE CLOSED BY DISPLAY UNIT*******************/
   if(p_closeCPAP){    // force the CPAP closed
     fracCPAP = 0.0;
+    fracPEEP = 1.0;
     fracDual = -1.0;
+    v_ie = 0;
+  }
+/***********************ALL VALVES OPENED BY DISPLAY UNIT*******************/
+  if(p_openAll){
+    fracCPAP = 1.0;
+    fracPEEP = 1.0;
+    fracDual = 0.0;
     v_ie = 0;
   }
 
@@ -219,20 +227,22 @@ void loop()
     sprintf(sc, "%s, %2d", sc, v_ie);
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
-    if(p_plotterMode){
-      PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase, v_q/10, v_vr/100, v_mv, v_bpms");
-      if(fracDual > 0) P(p_iph); else P(p_epl);
-      PCS(v_p);    // use with Serial plotter to visualize the pressure output
-      PCS(p_iph - p_iphTol);
-      PCS(p_epl + p_eplTol);
-      PCS(v_itr/1000.);
-      PCS(v_etr/1000.);
-      PCS(v_ie + 10);
-      PCS(v_q/10);
-      PCS(v_vr/100);
-      PCS(v_mv);
-      PCS(v_bpms);
-      PL();
-    } else PR(sc);   // print the whole string to the console
+    if(p_printConsole){
+      if(p_plotterMode){
+        PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase, v_q/10, v_vr/100, v_mv, v_bpms");
+        if(fracDual > 0) P(p_iph); else P(p_epl);
+        PCS(v_p);    // use with Serial plotter to visualize the pressure output
+        PCS(p_iph - p_iphTol);
+        PCS(p_epl + p_eplTol);
+        PCS(v_itr/1000.);
+        PCS(v_etr/1000.);
+        PCS(v_ie + 10);
+        PCS(v_q/10);
+        PCS(v_vr/100);
+        PCS(v_mv);
+        PCS(v_bpms);
+        PL();
+      } else PR(sc);   // print the whole string to the console
+    }
   }
 }

@@ -67,21 +67,25 @@ RWS_UNO uno = RWS_UNO();
 #define IT_MIN 500      ///< Inspiration time min
 #define ET_MIN 1000     ///< Expiration time min
 
-#define IP_MAX 40       ///< Inspiration pressure max
+#define IP_MAX 45       ///< Inspiration pressure max
 #define EP_MAX 40       ///< Expiration pressure max
 #define IP_MIN 2        ///< Inspiration pressure min
 #define EP_MIN 1        ///< Expiration pressure min
 
 #define ALARM_DELAY 3000  ///< don't alarm until the condition has lasted this long
-#define ALARM_LENGTH 100  ///< don't make an alarm sound longer than this
+#define ALARM_LENGTH 20  ///< don't make an alarm sound longer than this
 
 
 // Servo geometry will depend on the physical assembly of each unit and variability between servos.
 // These values will have to be set for each individual machine after final assembly.
 Servo servoCPAP, servoPEEP, servoDual;  ///< create servo object to control a servo
-int aMinCPAP = 60, aMaxCPAP = 90;      ///< independent CPAP valve position settings [servo degrees closed (Min) and open (Max)]
-int aMinPEEP = 60, aMaxPEEP = 90;       ///< independent PEEP valve position settings [servo degrees closed (Min) and open (Max)]
-int aCloseCPAP = 70, aClosePEEP = 99;  ///< dual valve position settings for fully closed [servo degrees]
+// These are the settings for the 2020-03-30 configuration on Rick's Board
+// int aMinCPAP = 22, aMaxCPAP = 52;
+// int aMinPEEP = 169, aMaxPEEP = 139;
+// int aCloseCPAP = 66, aClosePEEP = 98;
+int aMinCPAP = 22, aMaxCPAP = 52;      ///< independent CPAP valve position settings [servo degrees closed (Min) and open (Max)]
+int aMinPEEP = 169, aMaxPEEP = 139;       ///< independent PEEP valve position settings [servo degrees closed (Min) and open (Max)]
+int aCloseCPAP = 66, aClosePEEP = 98;  ///< dual valve position settings for fully closed [servo degrees]
 double aMid = (aCloseCPAP + aClosePEEP) / 2.0;
 
 // Detecting the time to end a phase does not instantly open valves and change flows.
@@ -124,10 +128,10 @@ unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occu
 unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
 
 // p_ for all elements that are set parameters for desired performance
-double p_iph = 14.0;          ///< the inspiration pressure upper bound.
+double p_iph = IP_MAX;        ///< the inspiration pressure upper bound.
 double p_ipl = 5.0;           ///< the inspiration pressure lower bound -- PEEP setting.
 double p_iphTol = 0.5;        ///< difference from p_eph required to trigger start of expiration if P > p_iph - p_iphTol or alarm if beyond
-double p_eph = 20.0;          ///< the expiration pressure upper bound.
+double p_eph = EP_MAX;        ///< the expiration pressure upper bound.
 double p_epl = 7.0;           ///< the expiration pressure lower bound -- PEEP setting.
 double p_eplTol = 0.5;        ///< difference from p_epl required to trigger start of new breath if P < p_epl + p_eplTol or alarm if beyond
 int p_it = PB_DEF * INF_DEF;  ///< inspiration time setting, high/low limits
@@ -137,20 +141,22 @@ int p_et = PB_DEF - p_it;     ///< expiration time setting, high/low limits
 int p_eth = ET_MAX;
 int p_etl = ET_MIN;
 bool p_trigEnabled = false;   ///< enable triggering on pressure limits
-bool p_closeCPAP = false;     ///< set true to close the CPAP valve, set false for normal running
+bool p_closeCPAP = false;     ///< set true to close the CPAP valve, must be set false for normal running
+bool p_openAll = false;     ///< set true to open all the valves, must be set false for normal running
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
 bool p_plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
+bool p_printConsole = true;     ///< set false to turn off console data output, notmally true
 
 // stackable error codes that will fit into v_alarm
 #define VENT_NO_ERROR   0b0                 ///< There is no Error
-#define VENT_IPL_ERROR  0b0000000000000001  ///< Inspiration Pressure Low
-#define VENT_IPH_ERROR  0b0000000000000010  ///< Inspiration Pressure High
-#define VENT_ITS_ERROR  0b0000000000000100  ///< Inspiration Time Short
-#define VENT_ITL_ERROR  0b0000000000001000  ///< Inspiration Time Long
-#define VENT_EPL_ERROR  0b0000000000010000  ///< Expiration Pressure Low
-#define VENT_EPH_ERROR  0b0000000000100000  ///< Expiration Pressure High
-#define VENT_ETS_ERROR  0b0000000001000000  ///< Expiration Time Short
-#define VENT_ETL_ERROR  0b0000000010000000  ///< Expiration Time Long
+#define VENT_IPL_ERROR  0b0000000000000001  ///< Inspiration Pressure Low < p_ipl
+#define VENT_IPH_ERROR  0b0000000000000010  ///< Inspiration Pressure High > p_iph
+#define VENT_ITS_ERROR  0b0000000000000100  ///< Inspiration Time Short < p_itl
+#define VENT_ITL_ERROR  0b0000000000001000  ///< Inspiration Time Long > p_ith
+#define VENT_EPL_ERROR  0b0000000000010000  ///< Expiration Pressure Low < p_epl
+#define VENT_EPH_ERROR  0b0000000000100000  ///< Expiration Pressure High > p_eph
+#define VENT_ETS_ERROR  0b0000000001000000  ///< Expiration Time Short < p_etl
+#define VENT_ETL_ERROR  0b0000000010000000  ///< Expiration Time Long > p_eth
 #define VENT_EXT_ERROR  0b1000000000000000  ///< External Error
 
 /**************************************************************************/
