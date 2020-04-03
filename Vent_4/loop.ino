@@ -28,19 +28,23 @@
 void loop()
 {
   // use unsigned long for millis() values, but int for short times so positive/negative differences calculate correctly
-  static unsigned long lastPrint = 0;
-  static unsigned long lastButton = 0;
-  static int perBreath = PB_DEF;
-  static unsigned long startBreath = 0;
-  static unsigned long startInspiration = 0;
-  static unsigned long startExpiration = 0;
-  static unsigned long endInspiration = 0;
-  static unsigned long endBreath = 0;
-  static double fracCPAP = 1.0; // wide open
-  static double fracPEEP = 1.0; // wide open
-  static double fracDual = 0.0; // halfway between, positive opens CPAP, negative opens PEEP
-  static int phaseTime = 0; // time in phase [ms] signed with flow direction, positive for inspiration, negative for expiration, 0 for transition
-  static bool stoppedInspiration = false;
+  static unsigned long lastPrint = 0;           // set to millis() when the last output was sent to Serial1
+  static unsigned long lastConsole = 0;         // set to millis() when the last output was sent to Serial
+  static unsigned long lastButton = 0;          // set to millis() at the end of the last button press
+  static int perBreath = PB_DEF;                // the number of ms per timed breath, updated at the start of every breath
+  static unsigned long startBreath = 0;         // set to millis() at the beginning of each breath
+  // All these times are set to zero at the beginning of each breath, then set to a millis() value as the breath progresses
+  static unsigned long startInspiration = 0;    // set to millis() during the first loop of inspiration
+  static unsigned long endInspiration = 0;      // set to millis() during every loop of inspiration, including the last one
+  static unsigned long startExpiration = 0;     // set to millis() during the first loop of expiration
+  static unsigned long endExpiration = 0;       // set to millis() during every loop of expiration, including the last one
+  static unsigned long endBreath = 0;           // set to millis() value that is projected for the end of the breath, unless triggered sooner
+  static double fracCPAP = 1.0;                 // target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
+  static double fracPEEP = 1.0;                 // target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
+  static double fracDual = 0.0;                 // target position for Dual Valve. 0.0 for halfway between, 1.0 fully opens CPAP, -1.0 fully opens PEEP
+  static int phaseTime = 0;                     // time in phase [ms] signed with flow direction, positive for inspiration, negative for expiration, never reset to 0
+  static bool startedInspiration = false;       // set false at start of breath, then true once we have inspiration at pressure
+  static bool stoppedInspiration = false;       // set false at start of breath, then true once inspiration is stopped
 
 /*********************UPDATE MEASUREMENTS AND PARAMETERS************************/  
   uno.run();    // keep track of things
@@ -48,18 +52,22 @@ void loop()
   // Test for loop rate
   if (uno.dtAvg() > 100000) PR("Taking longer than 100 ms per loop!\n");
   // Measure current state
-  v_batv = uno.getV(A_BAT) * DIV_BAT;
-  v_p = getP();
-  v_q = getQ();
+  v_batv = uno.getV(A_BAT) * DIV_BAT;   // Battery voltage from a voltage divider circuit
+  v_p = getP();                         // Current pressure to the patient in cm H2O
+  v_q = getQ();                         // Current flow rate to the patient in litres per minute
+  v_o2 = 0.21;                          // No sensor, so assume it is room air
 
   
 /********************NEW BREATH?********************************/   
   // check if it is time for the next breath of inspiration!
-  endBreath = startBreath + perBreath;  // finish the current breath first
-  if( endBreath - millis() > 60000      // we are past the end of expiration
-      || ((v_p > 1.0) && (v_p < p_epl + p_eplTol) && p_trigEnabled && (millis() - startBreath > 250))  
-      // we have a pressure and are below inspiration trigger and it's enabled and it's not the very beginning of inspiration
+  endBreath = startBreath + perBreath;  // scheduled end of the current breath
+  if( endBreath - millis() > 60000      // if we are past the projected end of the scheduled breath
+      || v_etr >= p_et                  // or we have been on expiration too long
+          // or we have a pressure and are below inspiration trigger and it's enabled and we have been inspiring
+      || ((v_p > 1.0) && (v_p < p_epl + p_eplTol) && p_trigEnabled && startedInspiration)  
       ) {
+
+    // Record Pressures from last breath and reset accumulated min/max values for next breath    
     v_pp = v_pmax; v_pl = v_pmin; v_pmax = 0; v_pmin = 99.99;
     v_ipp = v_ipmax; v_ipl = v_ipmin; v_ipmax = 0; v_ipmin = 99.99;
     v_epp = v_epmax; v_epl = v_epmin; v_epmax = 0; v_epmin = 99.99;
@@ -67,11 +75,19 @@ void loop()
 /**************UGLY UGLY FIX LATER**************************/
 //v_epl = v_pl; v_ipp = v_pp;
 
-    v_it = v_itr;  v_itr = 0; // store times for last breath
+    // Record Times for last breath, and rest rolling times
+    v_it = v_itr;  v_itr = 0;   // store times for last breath and reset rolling times
     v_et = v_etr;  v_etr = 0;
-    perBreath = p_it + p_et;      // update perBreath at start of each breath
-    if(v_it + v_et > 0) v_bpm = 60000. / (v_it + v_et); // set from actual times of last breath
-    else v_bpm = 0;   // set to zero if times are stupid
+    startBreath = millis();       // start a new breath
+    startedInspiration = false;   // hasn't had a good breath yet
+    stoppedInspiration = false;   // hasn't gone over pressure or finished yet
+    startInspiration = endInspiration = startExpiration = endExpiration = 0;  // reset times 
+    perBreath = p_it + p_et;    // update perBreath at start of each breath
+    if(v_it + v_et > 0) 
+      v_bpm = 60000. / (v_it + v_et); // set from actual times of last breath
+    else v_bpm = 0;                   // set to zero if times are stupid
+
+    // Record Volumes for last breath, and reset rolling volume
     v_v  = v_vr;   v_vr = 0;  // restart rolling estimate
     double mv = v_v * v_bpm / 1000.; // the latest minute volume
     double w = 0.5;
@@ -79,8 +95,7 @@ void loop()
     else v_mv = mv;
     if(v_bpms > 0 && v_bpms < 10000) v_bpms = w * v_bpm + (1-w) * v_bpms;    // smoothed bpm
     else v_bpms = v_bpm;
-    startBreath = millis();       // start a new breath
-    stoppedInspiration = false;    // hasn't gone over pressure yet
+
     // test for v_it, v_et error conditions
     if (v_it < p_itl){                              // inspiration time is too short
       if(!v_alarmOnTime) v_alarmOnTime = millis();  // set alarm time if not already
@@ -106,21 +121,29 @@ void loop()
 /**************************ALL PHASEs of BREATH********************************/  
   v_pmax = max(v_p,v_pmax);
   v_pmin = min(v_p,v_pmin);
+  if ((v_p > 1.0)               // we have a pressure 
+    && (v_p > p_iph - p_iphTol) // and are above expiration trigger 
+    && p_trigEnabled            // and triggering is enabled
+    && v_itr > p_itl)           // and we have been in inspiration phase long enough to trigger
+    stoppedInspiration = true;
+  if (v_itr > p_it)             // normal time limit is up
+    stoppedInspiration = true;  
 
 /**************************INSPIRATION PHASE********************************/  
-  if ((v_p > 1.0) && (v_p > p_iph - p_iphTol) && p_trigEnabled) // we have a pressure and are above expiration trigger 
-    stoppedInspiration = true;
-  if (v_itr > p_it) stoppedInspiration = true;  // time's up
-  if (millis() - startBreath < p_it && !stoppedInspiration) {   // inhalation
-    if(phaseTime < 0){ 
+  if (!stoppedInspiration) {    // inspiration until we stop
+    if(phaseTime < 0){  // We just switched over from expiration
       startInspiration = millis(); 
       v_ie = 0;
     }
     phaseTime = millis() - startInspiration;
+    if(phaseTime > IT_MIN) startedInspiration = true;   // we could stop now
     fracPEEP = 0;
     fracCPAP = 1.0;
     fracDual = 1.0;
     endInspiration = millis();
+    // Some of the measured flow volume in the first part of the inspiration phase
+    // may be outflow from the expiration phase while the valves are still moving into place.
+    // Using a venturi meter makes the flow look positive on both inspiration and expiration.
     double newVol = v_q * 1000. / 60.;  // convert to ml/s
     newVol *= uno.dt() / 1000000.;      // dt is in microseconds since last time through
     v_vr += newVol;
@@ -150,6 +173,13 @@ void loop()
     fracPEEP = 1.0;
     fracCPAP = 0.0;
     fracDual = -1.0;
+    endExpiration = millis();
+    // Some of the measured flow volume of inspiration occurs in the first part of
+    // the expiration phase while the valves are still moving into place.
+    // Using a venturi meter makes the flow look positive on both inspiration and expiration.
+    double newVol = v_q * 1000. / 60.;  // convert to ml/s
+    newVol *= uno.dt() / 1000000.;      // dt is in microseconds since last time through
+//    v_vr += newVol;   // need to determine if it should be included
     if(phaseTime < -ieTime){ // no longer in transition phase
       v_ie = -1;
       v_epmax = max(v_p,v_epmax);
@@ -205,10 +235,6 @@ void loop()
     p_alarm = false;
   }
 
-/*****************************UPDATE VALUES FROM CURRENT STATE****************/
-  double osc = sin(2 * 3.14159 * prog);
-  v_o2 = 0.21 + osc *0.01;
-
 /*****************************RESPOND TO ALARM CONDITIONS********************/
   if(!v_alarm){
     if(v_alarmOnTime){    // cancel an alarm that has recovered
@@ -238,6 +264,7 @@ void loop()
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
     if(p_printConsole){
+      lastConsole = millis();
       if(p_plotterMode){
         PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase, v_q/10, v_vr/100, v_mv, v_bpms");
         if(fracDual > 0) P(p_iph); else P(p_epl);
