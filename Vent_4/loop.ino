@@ -65,7 +65,7 @@ void loop()
     v_epp = v_epmax; v_epl = v_epmin; v_epmax = 0; v_epmin = 99.99;
 
 /**************UGLY UGLY FIX LATER**************************/
-v_epl = v_pl; v_ipp = v_pp;
+//v_epl = v_pl; v_ipp = v_pp;
 
     v_it = v_itr;  v_itr = 0; // store times for last breath
     v_et = v_etr;  v_etr = 0;
@@ -234,7 +234,7 @@ v_epl = v_pl; v_ipp = v_pp;
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_epp, v_epl, v_et);
     sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %lu", sc, v_bpm, v_v, v_mv, v_alarm);
     sprintf(sc, "%s, %2d", sc, v_ie);
-//    sprintf(sc, "%s, %5.2f, %5.2f", sc, v_pp, v_pl);
+    sprintf(sc, "%s, %5.2f, %5.2f", sc, v_pp, v_pl);
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
     if(p_printConsole){
