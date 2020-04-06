@@ -30,7 +30,6 @@ void loop()
   // use unsigned long for millis() values, but int for short times so positive/negative differences calculate correctly
   static unsigned long lastPrint = 0;           // set to millis() when the last output was sent to Serial1
   static unsigned long lastConsole = 0;         // set to millis() when the last output was sent to Serial
-  static unsigned long lastButton = 0;          // set to millis() at the end of the last button press
   static int perBreath = PB_DEF;                // the number of ms per timed breath, updated at the start of every breath
   static unsigned long startBreath = 0;         // set to millis() at the beginning of each breath
   // All these times are set to zero at the beginning of each breath, then set to a millis() value as the breath progresses
@@ -225,15 +224,7 @@ void loop()
   servoPEEP.write(posPEEP);
 
 /***************************RESPOND TO BUTTON(S)*******************************/  
-  if (millis()-lastButton > 500 && digitalRead(BUTTON_PIN) == LOW) {
-    lastButton = millis();
-    if (p_trigEnabled) p_trigEnabled = false; // toggle trigger mode
-    else p_trigEnabled = true;
-    v_alarm = VENT_NO_ERROR;  // reset alarm conditions
-    v_alarmOffTime = millis();
-    v_alarmOnTime = 0;
-    p_alarm = false;
-  }
+  loopButtons();
 
 /*****************************RESPOND TO ALARM CONDITIONS********************/
   if(!v_alarm){
