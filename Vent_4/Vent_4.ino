@@ -108,6 +108,11 @@ int eiTime = 400;   ///< transition time between end of expiration phase and sta
 // Go to different modes to allow testing
 int slowPrint = 1;           ///< set larger than 1 to print data more slowly
 
+  double fracCPAP = 1.0;                 // target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
+  double fracPEEP = 1.0;                 // target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
+  double fracDual = 0.0;                 // target position for Dual Valve. 0.0 for halfway between, 1.0 fully opens CPAP, -1.0 fully opens PEEP
+  double prog = 0;                       // progress through the current scheduled breath
+  
 // Global Variables from UI definition + a bit more
 // v_ for all elements that are measured or calculated from actual operations
 // Not necessarily declared in order of output to the display unit. Check the output code.

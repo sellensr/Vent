@@ -38,9 +38,6 @@ void loop()
   static unsigned long startExpiration = 0;     // set to millis() during the first loop of expiration
   static unsigned long endExpiration = 0;       // set to millis() during every loop of expiration, including the last one
   static unsigned long endBreath = 0;           // set to millis() value that is projected for the end of the breath, unless triggered sooner
-  static double fracCPAP = 1.0;                 // target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
-  static double fracPEEP = 1.0;                 // target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
-  static double fracDual = 0.0;                 // target position for Dual Valve. 0.0 for halfway between, 1.0 fully opens CPAP, -1.0 fully opens PEEP
   static int phaseTime = 0;                     // time in phase [ms] signed with flow direction, positive for inspiration, negative for expiration, never reset to 0
   static bool startedInspiration = false;       // set false at start of breath, then true once we have inspiration at pressure
   static bool stoppedInspiration = false;       // set false at start of breath, then true once inspiration is stopped
@@ -114,7 +111,8 @@ void loop()
     } else v_alarm = v_alarm & ~VENT_ETL_ERROR;     // reset the alarm bit
    }
   // progress through the breath sequence from 0 to 1.0 on the timed sequence
-  double prog = (millis() - startBreath) / (double) perBreath;
+//  double prog = (millis() - startBreath) / (double) perBreath;
+  prog = (millis() - startBreath) / (double) perBreath;
   prog = max(prog,0.0); prog = min(prog,1.0);
 
 /**************************ALL PHASEs of BREATH********************************/  
@@ -242,35 +240,5 @@ void loop()
   }
 
 /***********************SEND DATA TO CONSOLE / PLOTTER / DISPLAY UNIT**************/  
-  if (millis()-lastPrint > 50 * slowPrint) {  // 50 ms for 20 Hz, or slowed down for debug
-    lastPrint = millis();
-    char sc[200] = {0};
-    sprintf(sc, "%10lu, %5.3f, %5.2f, %5.2f, %5.2f", millis(), prog, fracCPAP, fracPEEP, fracDual);
-    sprintf(sc, "%s, %5.3f, %5.2f, %5.1f", sc, v_o2, v_p, v_q);
-    sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_ipp, v_ipl, v_it);
-    sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_epp, v_epl, v_et);
-    sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %lu", sc, v_bpm, v_v, v_mv, v_alarm);
-    sprintf(sc, "%s, %2d", sc, v_ie);
-    sprintf(sc, "%s, %5.2f, %5.2f", sc, v_pp, v_pl);
-    sprintf(sc, "%s\n", sc);
-    Serial1.print(sc);
-    if(p_printConsole){
-      lastConsole = millis();
-      if(p_plotterMode){
-        PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase, v_q/10, v_vr/100, v_mv, v_bpms");
-        if(fracDual > 0) P(p_iph); else P(p_epl);
-        PCS(v_p);    // use with Serial plotter to visualize the pressure output
-        PCS(p_iph - p_iphTol);
-        PCS(p_epl + p_eplTol);
-        PCS(v_itr/1000.);
-        PCS(v_etr/1000.);
-        PCS(v_ie + 10);
-        PCS(v_q/10);
-        PCS(v_vr/100);
-        PCS(v_mv);
-        PCS(v_bpms);
-        PL();
-      } else PR(sc);   // print the whole string to the console
-    }
-  }
+  loopOut();
 }
