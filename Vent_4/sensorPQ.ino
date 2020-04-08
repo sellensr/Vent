@@ -140,3 +140,23 @@ double getQ(){  // return the current value for patient flow in litres / minute
   return q;
 }
 #endif
+
+#ifdef Q_CAP2
+void setupQ(){  // do any setup required for flow measurement
+  for(int i = 0; i < 100; i++){
+    v_CPAPv = uno.getV(A_CAP_CPAP);  
+    v_PEEPv = uno.getV(A_CAP_PEEP);  
+  }
+}
+
+double getQ(){  // return the current value for patient flow in litres / minute
+  double w = 0.1; // weighting factor for exponential smoothing
+  double v = uno.getV(A_CAP_CPAP); // instantaneous voltage
+  v_CPAPv = v_CPAPv * (1-w) + v * w; // smoothed voltage
+  v = uno.getV(A_CAP_PEEP); // instantaneous voltage
+  v_PEEPv = v_PEEPv * (1-w) + v * w; // smoothed voltage
+  double q = (v_CPAPv - OFFSET_CAP_CPAP) * SCALE_CAP_CPAP;  // flow on the CPAP side
+  q -= (v_PEEPv - OFFSET_CAP_PEEP) * SCALE_CAP_PEEP;        // minus return flow on the PEEP side
+  return q;
+}
+#endif

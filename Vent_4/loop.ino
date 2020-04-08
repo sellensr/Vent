@@ -77,7 +77,8 @@ void loop()
     startBreath = millis();       // start a new breath
     startedInspiration = false;   // hasn't had a good breath yet
     stoppedInspiration = false;   // hasn't gone over pressure or finished yet
-    startInspiration = endInspiration = startExpiration = endExpiration = 0;  // reset times 
+    startInspiration = millis();
+    endInspiration = startExpiration = endExpiration = 0;  // reset times 
     perBreath = p_it + p_et;    // update perBreath at start of each breath
     if(v_it + v_et > 0) 
       v_bpm = 60000. / (v_it + v_et); // set from actual times of last breath
@@ -125,6 +126,10 @@ void loop()
     stoppedInspiration = true;
   if (v_itr > p_it)             // normal time limit is up
     stoppedInspiration = true;  
+  // Count all positive flow, regardless of phase
+  double newVol = v_q * 1000. / 60.;  // convert to ml/s
+  newVol *= uno.dt() / 1000000.;      // dt is in microseconds since last time through
+  if(newVol > 0) v_vr += newVol;
 
 /**************************INSPIRATION PHASE********************************/  
   if (!stoppedInspiration) {    // inspiration until we stop
@@ -138,12 +143,6 @@ void loop()
     fracCPAP = 1.0;
     fracDual = 1.0;
     endInspiration = millis();
-    // Some of the measured flow volume in the first part of the inspiration phase
-    // may be outflow from the expiration phase while the valves are still moving into place.
-    // Using a venturi meter makes the flow look positive on both inspiration and expiration.
-    double newVol = v_q * 1000. / 60.;  // convert to ml/s
-    newVol *= uno.dt() / 1000000.;      // dt is in microseconds since last time through
-    v_vr += newVol;
     if(phaseTime > eiTime){   // no longer in transition phase
       v_ie = 1;
       v_ipmax = max(v_p,v_ipmax);
@@ -171,12 +170,6 @@ void loop()
     fracCPAP = 0.0;
     fracDual = -1.0;
     endExpiration = millis();
-    // Some of the measured flow volume of inspiration occurs in the first part of
-    // the expiration phase while the valves are still moving into place.
-    // Using a venturi meter makes the flow look positive on both inspiration and expiration.
-    double newVol = v_q * 1000. / 60.;  // convert to ml/s
-    newVol *= uno.dt() / 1000000.;      // dt is in microseconds since last time through
-//    v_vr += newVol;   // need to determine if it should be included
     if(phaseTime < -ieTime){ // no longer in transition phase
       v_ie = -1;
       v_epmax = max(v_p,v_epmax);

@@ -37,28 +37,41 @@
 
 // define only one source for Q or else you will get a redefinition of 'xxx' error
 //#define Q_NONE          ///< there is no patient flow sensor
-#define Q_PX137         ///< use a PX137 as the flow sensor
+//#define Q_PX137         ///< use a PX137 as the flow sensor
+#define Q_CAP2          ///< use 2 Capillary sensors, one on CPAP side, one on PEEP, diff is flow
 
 // define only one hardware prototype -- config details to be resolved for production
 //#define YGK_MCL       ///< McLaughlin Hall Prototype
 #define YGK_RWS       ///< Rick Sellens Prototype
 
 /***************SET PINS HERE TO MATCH HARDWARE CONFIGURATION**************/
+// The calibration scale and offset values will be different for every combination of transducers.
 // read the battery state from a voltage divider
 #define A_BAT A3
 #define DIV_BAT 5.0
 // read the venturi as below
 #define A_VENTURI A5
-#define QSCALE_VENTURI 11.28  ///< (l/min) / cmH2O^0.5 to get Q = QSCALE_VENTURI * pow(p,0.5)
-#define PSCALE_VENTURI 23.53  ///< cmH20 / volt for venturi pressure sensor
-#define OFFSET_VENTURI 1.24   ///< volts at zero differential pressure on venturi
+#define QSCALE_VENTURI  11.28   ///< (l/min) / cmH2O^0.5 to get Q = QSCALE_VENTURI * pow(p,0.5)
+#define PSCALE_VENTURI  23.53   ///< cmH20 / volt for venturi pressure sensor
+#define OFFSET_VENTURI   1.3209 ///< volts at zero differential pressure on venturi
 // read the PX137 for patient pressure as below
 #define A_PX137 A4
-#define PSCALE_PX137 87.0    ///< cmH20 / volt for PX137 patient pressure sensor
-#define OFFSET_PX137 1.27     ///< volts at zero patient pressure
+#define PSCALE_PX137    87.00   ///< cmH20 / volt for PX137 patient pressure sensor
+#define OFFSET_PX137     1.2994 ///< volts at zero patient pressure
+// read the Capillary sensors as below
+#define A_CAP_CPAP A5           ///< replaces venturi
+#define SCALE_CAP_CPAP  50.00   ///< (l/min) / volt for capillary input from CPAP side
+#define OFFSET_CAP_CPAP  1.3209 ///< volts at zero differential pressure on CPAP side
+#define A_CAP_PEEP A3           ///< new in Vent_4
+#define SCALE_CAP_PEEP  50.00   ///< (l/min) / volt for capillary input from PEEP side
+#define OFFSET_CAP_PEEP  1.2725 ///< volts at zero differential pressure on PEEP side
+
 // other hardware and display settings below
 #define MINQ_VENTURI 1.0  ///< minimum litre/min to display as non-zero
-#define ALARM_PIN 5
+#define ALARM_PIN            5    // has 5 volt output for buzzer!
+#define BLUE_BUTTON_PIN     12
+#define YELLOW_BUTTON_PIN    3
+#define RED_BUTTON_PIN       4
 
 
 
@@ -143,7 +156,9 @@ double v_mv = 0.0;            ///< volume per minute averaged over recent breath
 unsigned long v_alarm = 0;    ///< status code, normally VENT_NO_ERROR, VENT_EXT_ERROR if externally imposed
 double v_batv = 0.;           ///< measured battery voltage, should be over 13 for powered, over 12 for charge remaining
 double v_venturiv = 0.;       ///< measured venturi voltage
-double v_px137v = 0.;       ///< measured venturi voltage
+double v_px137v = 0.;         ///< measured patient pressure voltage
+double v_CPAPv = 0.;          ///< measured CPAP side flow element voltage
+double v_PEEPv = 0.;          ///< measured PEEP side flow element voltage
 int v_ie = 0;                 ///< set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
 unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
 unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
@@ -193,7 +208,7 @@ void setup()
   Serial1.begin(115200);  ///< for communication to display unit or other supervisor. RX-->GND for none
   while(!Serial1 && millis() < 5000);
 
-  Serial.print("\n\nRWS Vent_2\n\n");
+  Serial.print("\n\nRWS Vent_4\n\n");
   setupP();
   setupQ();
   servoDual.attach(9);    ///< actuates both valve bodies alternately 9

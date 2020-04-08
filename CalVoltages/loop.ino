@@ -36,7 +36,7 @@ void loop()
     v[i] = uno.getV(i);
     vs[i] = (1-w)*vs[i] + w*v[i];
   }
-  if(millis() - lastPrint > 400){
+  if(millis() - lastPrint > 50){
     lastPrint = millis();
     P("Voltages: Smoothed (Instantaneous) ");
     for(int i = 0; i < 6; i++){
