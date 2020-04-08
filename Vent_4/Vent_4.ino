@@ -97,6 +97,7 @@ RWS_UNO uno = RWS_UNO();
 
 // Servo geometry will depend on the physical assembly of each unit and variability between servos.
 // These values will have to be set for each individual machine after final assembly.
+// Minimum values are for minimum flow, thus fully closed, Max for fully open
 Servo servoCPAP, servoPEEP, servoDual;  ///< create servo object to control a servo
 
 // These are the settings for the 2020-03-30 configuration on Rick's Board

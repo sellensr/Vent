@@ -165,6 +165,20 @@ boolean doConsoleCommand(String cmd) {
     PL("ACK Taking all valves to run mode.");
     ret = true;
     break;
+  case 'S': // Servo Angle Values
+    if (val[0] >= 0) aMinCPAP = min(val[0],180.);
+    if (val[1] >= 0) aMaxCPAP = min(val[1],180.);
+    if (val[2] >= 0) aMinPEEP = min(val[2],180.);
+    if (val[3] >= 0) aMaxPEEP = min(val[3],180.);
+    if (val[4] >= 0) aCloseCPAP = min(val[4],180.);
+    if (val[5] >= 0) aClosePEEP = min(val[5],180.);
+    aMid = (aCloseCPAP + aClosePEEP) / 2.0;
+    P("ACK Servo Angles set to\n");
+    P("    CPAP Valve: "); P(aMinCPAP); P(" / "); P(aMaxCPAP);  P("degrees\n");
+    P("    PEEP Valve: "); P(aMinPEEP); P(" / "); P(aMaxPEEP);  P("degrees\n");
+    P("    Dual Valve: "); P(aCloseCPAP); P(" / "); P(aMid); P(" / "); P(aClosePEEP);  P("degrees\n"); 
+    ret = true;
+    break;
   case 't': // breath timing
     if (val[0] >= IT_MIN) p_it = min(val[0], IT_MAX);
     if (val[1] >= ET_MIN) p_et = min(val[1], ET_MAX);
@@ -216,6 +230,7 @@ void listConsoleCommands() {
   P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
   P("  P - set print mode, positive for plotter mode on, negative for no console output, \n        0 for plotter mode off, e.g. P1\n");
   P("  R - set to normal (R)un mode, e.g. R\n");
+  P("  S - set closed/open settings for CPAP and PEEP valve (S)ervos, e.g. S130,180,90,140,66,98\n");
   P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
   P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");
   P("  x - open all valves, e.g. x\n");
