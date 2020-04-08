@@ -96,6 +96,19 @@ boolean doConsoleCommand(String cmd) {
     PL(v_alarm);
     ret = true;
     break;
+  case 'C': // Calibration Values
+    if (val[0] != 0) p_pOffset = val[0];
+    if (val[1] != 0) p_qOffsetCPAP = val[1];
+    if (val[2] != 0) p_qOffsetPEEP = val[2];
+    if (val[3] != 0) p_pScale = val[3];
+    if (val[4] != 0) p_qScaleCPAP = val[4];
+    if (val[5] != 0) p_qScalePEEP = val[5];
+    P("ACK Offsets and Scales set to\n");
+    P("     Pressure: "); P(p_pOffset); P("V / "); P(p_pScale);  P("cmH2O / V\n"); 
+    P("    CPAP Flow: "); P(p_qOffsetCPAP); P("V / "); P(p_qScaleCPAP);  P("lpm / V\n");
+    P("    PEEP Flow: "); P(p_qOffsetPEEP); P("V / "); P(p_qScalePEEP);  P("lpm / V\n");
+    ret = true;
+    break;
   case 'e': // Expiratory Times
     if (val[0] >= ET_MIN) p_et = min(val[0], ET_MAX);
     if (val[1] >= ET_MIN) p_eth = min(val[1], ET_MAX);
@@ -195,6 +208,8 @@ boolean doConsoleCommand(String cmd) {
 /**************************************************************************/
 void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
+  P("  A - set (A)larm condition on (positive argument),  off (negative argument),\n      or just show condition (0 argument), e.g. A-1\n");
+  P("  C - set desired (C)alibration offsets and scale factors for patient pressure, CPAP flow, and PEEP flow\n      e.g. C1.2435,1.2532,1.3121,90.3,50.4,42.1\n");
   P("  e - set desired patient (e)xpiratory times target, high/low limits [ms], e.g. e2500,4500,1000\n");
   P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
   P("  i - set desired patient (i)nspiratory times target, high/low limits [ms], e.g. i2000,3500,1200\n");

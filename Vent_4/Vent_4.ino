@@ -182,6 +182,12 @@ bool p_openAll = false;     ///< set true to open all the valves, must be set fa
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
 bool p_plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
 bool p_printConsole = true;     ///< set false to turn off console data output, notmally true
+double p_pScale = PSCALE_PX137;         ///< cmH20 / volt for PX137 patient pressure sensor
+double p_pOffset = OFFSET_PX137;        ///< volts at zero patient pressure
+double p_qScaleCPAP = SCALE_CAP_CPAP;   ///< (l/min) / volt for capillary input from CPAP side
+double p_qOffsetCPAP = OFFSET_CAP_CPAP; ///< volts at zero differential pressure on CPAP side
+double p_qScalePEEP = SCALE_CAP_PEEP;   ///< (l/min) / volt for capillary input from PEEP side
+double p_qOffsetPEEP = OFFSET_CAP_PEEP; ///< volts at zero differential pressure on PEEP side
 
 // stackable error codes that will fit into v_alarm
 #define VENT_NO_ERROR   0b0                 ///< There is no Error

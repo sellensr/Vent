@@ -22,6 +22,7 @@ void loopOut()
     sprintf(sc, "%s, %5.2f, %5.2f, %5.2f, %lu", sc, v_bpm, v_v, v_mv, v_alarm);
     sprintf(sc, "%s, %2d", sc, v_ie);
     sprintf(sc, "%s, %5.2f, %5.2f", sc, v_pp, v_pl);
+    sprintf(sc, "%s, %5.2f", sc, v_batv); // could be added on the end
     sprintf(sc, "%s\n", sc);
     Serial1.print(sc);
     if(p_printConsole){
