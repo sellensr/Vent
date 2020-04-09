@@ -28,20 +28,44 @@ void loopOut()
     if(p_printConsole){
       lastConsole = millis();
       if(p_plotterMode){
-        PL("pSet, Pressure[cmH2O], HighLimit, LowLimit, InspTime, ExpTime, Phase, v_q/10, v_vr/100, v_mv, v_bpms");
+        PL("pSet, Pressure[cmH2O], Phase, v_q, v_vr/100");
         if(fracDual > 0) P(p_iph); else P(p_epl);
         PCS(v_p);    // use with Serial plotter to visualize the pressure output
-        PCS(p_iph - p_iphTol);
-        PCS(p_epl + p_eplTol);
-        PCS(v_itr/1000.);
-        PCS(v_etr/1000.);
+//        PCS(p_iph - p_iphTol);
+//        PCS(p_epl + p_eplTol);
+//        PCS(v_itr/1000.);
+//        PCS(v_etr/1000.);
         PCS(v_ie + 10);
-        PCS(v_q/10);
+        PCS(v_q);
         PCS(v_vr/100);
-        PCS(v_mv);
-        PCS(v_bpms);
+//        PCS(v_mv);
+//        PCS(v_bpms);
         PL();
       } else PR(sc);   // print the whole string to the console
     }
   }
+}
+
+void showVoltages(int n)
+{
+  double v[6] = {0};
+  double vs[6] = {0};
+  for(int j = 0; j < n; j++){
+    for(int i = 0; i < 6; i++){
+      v[i] = uno.getV(i);
+      vs[i] += v[i];
+    }
+  }
+  for(int i = 0; i < 6; i++) vs[i] /= n;
+  P("Voltages: Averaged (Instantaneous) ");
+  int i = A_PX137 - A0;
+  P("Pressure on A"); P(i); P(": "); P(vs[i],4); 
+  P(" ("); P(v[i],4); P(")  ");
+  i = A_CAP_CPAP - A0;
+  P("CPAP Flow on A"); P(i); P(": "); P(vs[i],4); 
+  P(" ("); P(v[i],4); P(")  ");
+  i = A_CAP_CPAP - A0;
+  P("PEEP Flow on A"); P(i); P(": "); P(vs[i],4); 
+  P(" ("); P(v[i],4); P(")  ");
+  P("\n");
 }

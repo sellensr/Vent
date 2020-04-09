@@ -44,20 +44,22 @@ void loopConsole(){
              // string
   }
 
-  // exactly the same, except for commands input from Serial1 to ci1
-  static String ci1 = "";
-  if (readConsoleCommand1(&ci1)) {
-    P("\nFrom Serial1:");
-    PL(ci1);
-    // or just send the whole String to one of these functions for parsing and
-    // action
-    if (!doConsoleCommand(ci1)) {
-      P("NOACK Not an application specific command: ");
+  if(p_useSerial1){   // ignore Serial1 unless asked to watch it
+    // exactly the same, except for commands input from Serial1 to ci1
+    static String ci1 = "";
+    if (readConsoleCommand1(&ci1)) {
+      P("\nFrom Serial1:");
       PL(ci1);
-      listConsoleCommands();
+      // or just send the whole String to one of these functions for parsing and
+      // action
+      if (!doConsoleCommand(ci1)) {
+        P("NOACK Not an application specific command: ");
+        PL(ci1);
+        listConsoleCommands();
+      }
+      ci1 = ""; // don't call readConsoleCommand() again until you have cleared the
+               // string
     }
-    ci1 = ""; // don't call readConsoleCommand() again until you have cleared the
-             // string
   }
 }
 
@@ -77,7 +79,14 @@ boolean doConsoleCommand(String cmd) {
   s.trim();                    // trimmed of white space
   int ival = val[0];           // an integer version of the first float arg
   unsigned long logPeriod;
+  int n = 1;
   switch (c) {
+  case 'a': // show analog voltages
+    if(val[0] < 1) n = 10000;
+    n = min(n,10000);
+    showVoltages(n);
+    ret = true;
+    break;
   case 'A': // alarm condition
     if (val[0] > 0){ 
       p_alarm = true;
@@ -104,9 +113,9 @@ boolean doConsoleCommand(String cmd) {
     if (val[4] != 0) p_qScaleCPAP = val[4];
     if (val[5] != 0) p_qScalePEEP = val[5];
     P("ACK Offsets and Scales set to\n");
-    P("     Pressure: "); P(p_pOffset); P("V / "); P(p_pScale);  P("cmH2O / V\n"); 
-    P("    CPAP Flow: "); P(p_qOffsetCPAP); P("V / "); P(p_qScaleCPAP);  P("lpm / V\n");
-    P("    PEEP Flow: "); P(p_qOffsetPEEP); P("V / "); P(p_qScalePEEP);  P("lpm / V\n");
+    P("     Pressure: "); P(p_pOffset,4);     P("V / "); P(p_pScale);      P(" cmH2O / V\n"); 
+    P("    CPAP Flow: "); P(p_qOffsetCPAP,4); P("V / "); P(p_qScaleCPAP);  P(" lpm / V\n");
+    P("    PEEP Flow: "); P(p_qOffsetPEEP,4); P("V / "); P(p_qScalePEEP);  P(" lpm / V\n");
     ret = true;
     break;
   case 'e': // Expiratory Times
@@ -159,24 +168,29 @@ boolean doConsoleCommand(String cmd) {
     else P("False\n");
     ret = true;
     break;
+  case 'r': // read current calibrations
+    P("ACK reading calibration settings file.\n");
+    readCalFlash();
+    ret = true;
+    break;
   case 'R': // Run Mode
     p_closeCPAP = false;
     p_openAll = false;
     PL("ACK Taking all valves to run mode.");
     ret = true;
     break;
-  case 'S': // Servo Angle Values
-    if (val[0] >= 0) aMinCPAP = min(val[0],180.);
-    if (val[1] >= 0) aMaxCPAP = min(val[1],180.);
-    if (val[2] >= 0) aMinPEEP = min(val[2],180.);
-    if (val[3] >= 0) aMaxPEEP = min(val[3],180.);
-    if (val[4] >= 0) aCloseCPAP = min(val[4],180.);
-    if (val[5] >= 0) aClosePEEP = min(val[5],180.);
+  case 'S': // Servo Angle Values -- don't accept zeros!
+    if (val[0] > 0) aMinCPAP = min(val[0],180.);
+    if (val[1] > 0) aMaxCPAP = min(val[1],180.);
+    if (val[2] > 0) aMinPEEP = min(val[2],180.);
+    if (val[3] > 0) aMaxPEEP = min(val[3],180.);
+    if (val[4] > 0) aCloseCPAP = min(val[4],180.);
+    if (val[5] > 0) aClosePEEP = min(val[5],180.);
     aMid = (aCloseCPAP + aClosePEEP) / 2.0;
     P("ACK Servo Angles set to\n");
-    P("    CPAP Valve: "); P(aMinCPAP); P(" / "); P(aMaxCPAP);  P("degrees\n");
-    P("    PEEP Valve: "); P(aMinPEEP); P(" / "); P(aMaxPEEP);  P("degrees\n");
-    P("    Dual Valve: "); P(aCloseCPAP); P(" / "); P(aMid); P(" / "); P(aClosePEEP);  P("degrees\n"); 
+    P("    CPAP Valve: "); P(aMinCPAP);   P(" / "); P(aMaxCPAP);  P(" degrees\n");
+    P("    PEEP Valve: "); P(aMinPEEP);   P(" / "); P(aMaxPEEP);  P(" degrees\n");
+    P("    Dual Valve: "); P(aCloseCPAP); P(" / "); P(aMid,0);    P(" / ");       P(aClosePEEP);  P(" degrees\n"); 
     ret = true;
     break;
   case 't': // breath timing
@@ -193,6 +207,22 @@ boolean doConsoleCommand(String cmd) {
     if(p_trigEnabled) P("True\n");
     else P("False\n");
     ret = true;
+    break;
+  case 'w': // write current calibrations
+    P("ACK writing calibration settings file.\n");
+    writeCalFlash();
+    ret = true;
+    break;
+  case 'W': // wipe calibrations and return to defaults
+    if (val[0] != 99){ 
+      P("The argument must be 99 to wipe the calibration settings!!!\n");
+      ret = false;
+    }
+    else {
+      P("ACK wiping calibration settings file and returning to defaults on restart.\n");
+      wipeCalFlash();
+      ret = true;
+    }
     break;
   case 'x': // Close CPAP
     p_openAll = true;
@@ -222,6 +252,7 @@ boolean doConsoleCommand(String cmd) {
 /**************************************************************************/
 void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
+  P("  a - read and display (a)nalog voltages, averaging over n values, e.g. a10\n");
   P("  A - set (A)larm condition on (positive argument),  off (negative argument),\n      or just show condition (0 argument), e.g. A-1\n");
   P("  C - set desired (C)alibration offsets and scale factors for patient pressure, CPAP flow, and PEEP flow\n      e.g. C1.2435,1.2532,1.3121,90.3,50.4,42.1\n");
   P("  e - set desired patient (e)xpiratory times target, high/low limits [ms], e.g. e2500,4500,1000\n");
@@ -229,10 +260,13 @@ void listConsoleCommands() {
   P("  i - set desired patient (i)nspiratory times target, high/low limits [ms], e.g. i2000,3500,1200\n");
   P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
   P("  P - set print mode, positive for plotter mode on, negative for no console output, \n        0 for plotter mode off, e.g. P1\n");
+  P("  r - (r)ead in the calibration, servo angles, and other settings from the file, e.g. r\n");
   P("  R - set to normal (R)un mode, e.g. R\n");
   P("  S - set closed/open settings for CPAP and PEEP valve (S)ervos, e.g. S130,180,90,140,66,98\n");
   P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
   P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");
+  P("  w - (w)rite out the calibration, servo angles, and other settings to the file, e.g. w\n");
+  P("  W - (W)ipe out the calibration, servo angles, and other settings and return to defaults, e.g. W99\n");
   P("  x - open all valves, e.g. x\n");
   P("  X - close the CPAP valve, e.g. X\n");
   P("\nNormal data lines start with a numeral. All command lines received will generate at least\n");

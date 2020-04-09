@@ -32,8 +32,8 @@
 /****************SET INSTRUMENTATION TYPES HERE****************************/
 // define only one source for P or else you will get a redefinition of 'xxx' error
 //#define P_NONE          ///< there is no patient pressure sensor
-#define P_BME280        ///< use the paired BME280s as the patient pressure sensors
-//#define P_PX137         ///< use a PX137 as the patient pressure sensor
+//#define P_BME280        ///< use the paired BME280s as the patient pressure sensors
+#define P_PX137         ///< use a PX137 as the patient pressure sensor
 
 // define only one source for Q or else you will get a redefinition of 'xxx' error
 //#define Q_NONE          ///< there is no patient flow sensor
@@ -56,15 +56,15 @@
 #define OFFSET_VENTURI   1.3209 ///< volts at zero differential pressure on venturi
 // read the PX137 for patient pressure as below
 #define A_PX137 A4
-#define PSCALE_PX137    87.00   ///< cmH20 / volt for PX137 patient pressure sensor
-#define OFFSET_PX137     1.2994 ///< volts at zero patient pressure
+#define PSCALE_PX137    53.60   ///< cmH20 / volt for PX137 patient pressure sensor
+#define OFFSET_PX137     1.2945 ///< volts at zero patient pressure
 // read the Capillary sensors as below
 #define A_CAP_CPAP A5           ///< replaces venturi
-#define SCALE_CAP_CPAP  50.00   ///< (l/min) / volt for capillary input from CPAP side
-#define OFFSET_CAP_CPAP  1.3209 ///< volts at zero differential pressure on CPAP side
+#define SCALE_CAP_CPAP 130.00   ///< (l/min) / volt for capillary input from CPAP side
+#define OFFSET_CAP_CPAP  1.3192 ///< volts at zero differential pressure on CPAP side
 #define A_CAP_PEEP A3           ///< new in Vent_4
-#define SCALE_CAP_PEEP  50.00   ///< (l/min) / volt for capillary input from PEEP side
-#define OFFSET_CAP_PEEP  1.2725 ///< volts at zero differential pressure on PEEP side
+#define SCALE_CAP_PEEP  80.00   ///< (l/min) / volt for capillary input from PEEP side
+#define OFFSET_CAP_PEEP  1.2750 ///< volts at zero differential pressure on PEEP side
 
 // other hardware and display settings below
 #define MINQ_VENTURI 1.0  ///< minimum litre/min to display as non-zero
@@ -183,6 +183,8 @@ bool p_openAll = false;     ///< set true to open all the valves, must be set fa
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
 bool p_plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
 bool p_printConsole = true;     ///< set false to turn off console data output, notmally true
+bool p_useSerial1 = false;      ///< set false to avoid noise on RX of Serial1 if not connected
+
 double p_pScale = PSCALE_PX137;         ///< cmH20 / volt for PX137 patient pressure sensor
 double p_pOffset = OFFSET_PX137;        ///< volts at zero patient pressure
 double p_qScaleCPAP = SCALE_CAP_CPAP;   ///< (l/min) / volt for capillary input from CPAP side
@@ -216,6 +218,7 @@ void setup()
   while(!Serial1 && millis() < 5000);
 
   Serial.print("\n\nRWS Vent_4\n\n");
+  setupFlash();
   setupP();
   setupQ();
   servoDual.attach(9);    ///< actuates both valve bodies alternately 9
@@ -226,6 +229,9 @@ void setup()
   servoCPAP.write(aMaxCPAP);  
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BLUE_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(YELLOW_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
   pinMode(ALARM_PIN, OUTPUT);
   digitalWrite(ALARM_PIN, HIGH);
   delay(5); ///< just long enough to make a little squeak
