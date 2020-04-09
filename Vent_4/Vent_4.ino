@@ -174,7 +174,7 @@ double v_PEEPv = 0.;          ///< measured PEEP side flow element voltage
 int v_ie = 0;                 ///< set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
 unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
 unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
-double v_tauW = 0.1;          ///< the smoothing weight factor to use this cycle for time constant p_tau
+double v_tauW = 0.001;          ///< the smoothing weight factor to use this cycle for time constant p_tau
 
 // p_ for all elements that are set parameters for desired performance
 double p_iph = IP_MAX;        ///< the inspiration pressure upper bound.

@@ -47,6 +47,8 @@ void loop()
   loopConsole();// check for console input
   // Test for loop rate
   // if (uno.dtAvg() > 100000) PR("Taking longer than 100 ms per loop!\n");
+  v_tauW = min(1.,(double) uno.dt() / p_tau / 1000000.);   // weight to give the latest reading of a in smoothing
+
   // Measure current state
   v_batv = uno.getV(A_BAT) * DIV_BAT;   // Battery voltage from a voltage divider circuit
   v_p = getP();                         // Current pressure to the patient in cm H2O

@@ -31,6 +31,7 @@ void listConsoleCommands() {
   P("  a - read and display (a)nalog voltages, averaging over n values, e.g. a10\n      Set offset values if n is less than 0, e.g. a-1\n");
   P("  A - set (A)larm condition on (positive argument),  off (negative argument),\n      or just show condition (0 argument), e.g. A-1\n");
   P("  C - set desired (C)alibration offsets and scale factors for patient pressure, CPAP flow, and PEEP flow\n      e.g. C1.2435,1.2532,1.3121,90.3,50.4,42.1\n");
+  P("  D - set desired (D)amping time constant for noise reduction [s], e.g. D0.1\n");
   P("  e - set desired patient (e)xpiratory times target, high/low limits [ms], e.g. e2500,4500,1000\n");
   P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
   P("  f - read and display (f)low values, averaging over n values, e.g. f10\n");
@@ -158,6 +159,12 @@ boolean doConsoleCommand(String cmd) {
     P("     Pressure: "); P(p_pOffset,4);     P("V / "); P(p_pScale);      P(" cmH2O / V\n"); 
     P("    CPAP Flow: "); P(p_qOffsetCPAP,4); P("V / "); P(p_qScaleCPAP);  P(" lpm / V\n");
     P("    PEEP Flow: "); P(p_qOffsetPEEP,4); P("V / "); P(p_qScalePEEP);  P(" lpm / V\n");
+    ret = true;
+    break;
+  case 'D': // Damping time constant
+    if (val[0] > 0) p_tau = min(val[0],1.0);
+    P("ACK Damping time constant set to: ");
+    P(p_tau,3); P(" seconds\n");
     ret = true;
     break;
   case 'e': // Expiratory Times
