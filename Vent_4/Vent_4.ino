@@ -42,8 +42,8 @@
 
 // define only one hardware prototype -- config details to be resolved for production
 //#define YGK_MCL       ///< McLaughlin Hall Prototype
-#define YGK_RWS       ///< Rick Sellens Prototype
-
+//#define YGK_RWS       ///< Rick Sellens Prototype
+#define YGK_GENERIC   ///< Generic Prototype needs settings and configuration
 /***************SET PINS HERE TO MATCH HARDWARE CONFIGURATION**************/
 // The calibration scale and offset values will be different for every combination of transducers.
 // read the battery state from a voltage divider
@@ -100,18 +100,27 @@ RWS_UNO uno = RWS_UNO();
 // Minimum values are for minimum flow, thus fully closed, Max for fully open
 Servo servoCPAP, servoPEEP, servoDual;  ///< create servo object to control a servo
 
+// These are the generic settings, which will need to be configured
+#ifdef YGK_GENERIC
+ int aMinCPAP = 90, aMaxCPAP = 90;
+ int aMinPEEP = 90, aMaxPEEP = 90;
+ int aCloseCPAP = 90, aClosePEEP = 90;  ///< dual valve position settings for fully closed [servo degrees]
+#endif
+
 // These are the settings for the 2020-03-30 configuration on Rick's Board
 #ifdef YGK_RWS
  int aMinCPAP = 22, aMaxCPAP = 52;
  int aMinPEEP = 169, aMaxPEEP = 139;
+ int aCloseCPAP = 66, aClosePEEP = 98;  ///< dual valve position settings for fully closed [servo degrees]
 #endif
 
 // These are the settings for the 2020-03-31 configuration on the McLaughlin Board
 #ifdef YGK_MCL
  int aMinCPAP = 130, aMaxCPAP = 180;
  int aMinPEEP = 90, aMaxPEEP = 140;
+ int aCloseCPAP = 66, aClosePEEP = 98;  ///< dual valve position settings for fully closed [servo degrees]
 #endif
-int aCloseCPAP = 66, aClosePEEP = 98;  ///< dual valve position settings for fully closed [servo degrees]
+
 double aMid = (aCloseCPAP + aClosePEEP) / 2.0;
 
 // Detecting the time to end a phase does not instantly open valves and change flows.
@@ -131,28 +140,30 @@ int slowPrint = 1;           ///< set larger than 1 to print data more slowly
 // v_ for all elements that are measured or calculated from actual operations
 // Not necessarily declared in order of output to the display unit. Check the output code.
 double v_o2 = 0.0;            ///< measured instantaneous oxygen volume fraction [0 to 1.0]
-double v_p = 0.42;            ///< current instantaneous pressure [cm H2O]
+double v_p = 0.0;             ///< current instantaneous pressure [cm H2O]
 double v_q = 0.0;             ///< current instantaneous flow to patient [l/min]
-double v_pp = 99.9;          ///< highest pressure during any phase of last breath [cm H2o]
-double v_pl = 99.9;          ///< lowest pressure during any phase of last breath [cm H2O]
-double v_pmax = 0.0;         ///< highest pressure so far during this breath [cm H2o]
-double v_pmin = 99.9;        ///< lowest pressure so far during this breath [cm H2O]
-double v_ipp = 99.9;          ///< highest pressure during inspiration phase of last breath [cm H2o]
-double v_ipl = 99.9;          ///< lowest pressure during inspiration phase of last breath [cm H2O]
+double v_qCPAP = 0.0;         ///< current instantaneous flow returning on PEEP side [l/min]
+double v_qPEEP = 0.0;         ///< current instantaneous flow out on CPAP side [l/min]
+double v_pp = 0.0;            ///< highest pressure during any phase of last breath [cm H2o]
+double v_pl = 0.0;            ///< lowest pressure during any phase of last breath [cm H2O]
+double v_pmax = 0.0;          ///< highest pressure so far during this breath [cm H2o]
+double v_pmin = 0.0;          ///< lowest pressure so far during this breath [cm H2O]
+double v_ipp = 0.0;           ///< highest pressure during inspiration phase of last breath [cm H2o]
+double v_ipl = 0.0;           ///< lowest pressure during inspiration phase of last breath [cm H2O]
 double v_ipmax = 0.0;         ///< highest pressure so far during this inspiration phase [cm H2o]
-double v_ipmin = 99.9;        ///< lowest pressure so far during this inspiration phase [cm H2O]
+double v_ipmin = 0.0;         ///< lowest pressure so far during this inspiration phase [cm H2O]
 int v_it = 0;                 ///< inspiration time during last breath [ms]
 int v_itr = 0;                ///< rolling inspiration time during current breath [ms]
-double v_epp = 99.9;          ///< highest pressure during expiration phase of last breath [cm H2o]
-double v_epl = 99.9;          ///< lowest pressure during expiration phase of last breath [cm H2O]
+double v_epp = 0.0;           ///< highest pressure during expiration phase of last breath [cm H2o]
+double v_epl = 0.0;           ///< lowest pressure during expiration phase of last breath [cm H2O]
 double v_epmax = 0.0;         ///< highest pressure so far during this expiration phase [cm H2o]
-double v_epmin = 99.9;        ///< lowest pressure so far during this expiration phase [cm H2O]
+double v_epmin = 0.0;         ///< lowest pressure so far during this expiration phase [cm H2O]
 int v_et = 0;                 ///< expiration time during last breath [ms]
 int v_etr = 0;                ///< rolling expiration time during current breath [ms]
 double v_bpm = 0.0;           ///< BPM for last breath
 double v_bpms = 0.0;          ///< BPM averaged over recent breaths
 double v_v = 0.0;             ///< inspiration volume of last breath [ml]
-double v_vr = 0.0;             ///< rolling inspiration volume of current breath [ml]
+double v_vr = 0.0;            ///< rolling inspiration volume of current breath [ml]
 double v_mv = 0.0;            ///< volume per minute averaged over recent breaths [l / min]
 unsigned long v_alarm = 0;    ///< status code, normally VENT_NO_ERROR, VENT_EXT_ERROR if externally imposed
 double v_batv = 0.;           ///< measured battery voltage, should be over 13 for powered, over 12 for charge remaining
@@ -163,6 +174,7 @@ double v_PEEPv = 0.;          ///< measured PEEP side flow element voltage
 int v_ie = 0;                 ///< set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
 unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
 unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
+double v_tauW = 0.1;          ///< the smoothing weight factor to use this cycle for time constant p_tau
 
 // p_ for all elements that are set parameters for desired performance
 double p_iph = IP_MAX;        ///< the inspiration pressure upper bound.
@@ -180,6 +192,7 @@ int p_etl = ET_MIN;
 bool p_trigEnabled = false;   ///< enable triggering on pressure limits
 bool p_closeCPAP = false;     ///< set true to close the CPAP valve, must be set false for normal running
 bool p_openAll = false;     ///< set true to open all the valves, must be set false for normal running
+bool p_stopped = false;     ///< set true to enable menu items that could interfere with normal running
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
 bool p_plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
 bool p_printConsole = true;     ///< set false to turn off console data output, notmally true
@@ -191,6 +204,7 @@ double p_qScaleCPAP = SCALE_CAP_CPAP;   ///< (l/min) / volt for capillary input 
 double p_qOffsetCPAP = OFFSET_CAP_CPAP; ///< volts at zero differential pressure on CPAP side
 double p_qScalePEEP = SCALE_CAP_PEEP;   ///< (l/min) / volt for capillary input from PEEP side
 double p_qOffsetPEEP = OFFSET_CAP_PEEP; ///< volts at zero differential pressure on PEEP side
+double p_tau = 0.10;                    ///< instrumentation smoothing time constant [s]
 
 // stackable error codes that will fit into v_alarm
 #define VENT_NO_ERROR   0b0                 ///< There is no Error

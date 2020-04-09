@@ -83,7 +83,7 @@ void setupP(){  // do any setup required for pressure measurement
  
 double getP(){  // return the current value for patient pressure in cm H20
   double v = uno.getV(A_PX137); // instantaneous voltage
-  double w = 0.1; // weighting factor for exponential smoothing
+  double w = v_tauW; // weighting factor for exponential smoothing
   v_px137v = v_px137v * (1-w) + v * w; // smoothed voltage
   double p = (v_px137v - p_pOffset) * p_pScale;
   return p;   
@@ -131,7 +131,7 @@ void setupQ(){  // do any setup required for flow measurement
 
 double getQ(){  // return the current value for patient flow in litres / minute
   double v = uno.getV(A_VENTURI); // instantaneous voltage
-  double w = 0.1; // weighting factor for exponential smoothing
+  double w = v_tauW; // weighting factor for exponential smoothing
   v_venturiv = v_venturiv * (1-w) + v * w; // smoothed voltage
   double p = (v_venturiv - OFFSET_VENTURI) * PSCALE_VENTURI;
   double q = pow(abs(p),0.5) * QSCALE_VENTURI; 
@@ -150,13 +150,13 @@ void setupQ(){  // do any setup required for flow measurement
 }
 
 double getQ(){  // return the current value for patient flow in litres / minute
-  double w = 0.1; // weighting factor for exponential smoothing
+  double w = v_tauW; // weighting factor for exponential smoothing
   double v = uno.getV(A_CAP_CPAP); // instantaneous voltage
   v_CPAPv = v_CPAPv * (1-w) + v * w; // smoothed voltage
   v = uno.getV(A_CAP_PEEP); // instantaneous voltage
   v_PEEPv = v_PEEPv * (1-w) + v * w; // smoothed voltage
-  double q = (v_CPAPv - p_qOffsetCPAP) * p_qScaleCPAP;  // flow on the CPAP side
-  q -= (v_PEEPv - p_qOffsetPEEP) * p_qScalePEEP;        // minus return flow on the PEEP side
-  return q;
+  v_qCPAP = (v_CPAPv - p_qOffsetCPAP) * p_qScaleCPAP;  // flow on the CPAP side
+  v_qPEEP = (v_PEEPv - p_qOffsetPEEP) * p_qScalePEEP;  // minus return flow on the PEEP side
+  return v_qCPAP - v_qPEEP;
 }
 #endif

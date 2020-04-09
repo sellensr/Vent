@@ -12,7 +12,7 @@ void loopOut()
   static unsigned long lastConsole = 0;         // set to millis() when the last output was sent to Serial
 
 /***********************SEND DATA TO CONSOLE / PLOTTER / DISPLAY UNIT**************/  
-  if (millis()-lastPrint > 50 * slowPrint) {  // 50 ms for 20 Hz, or slowed down for debug
+  if (millis()-lastPrint > 50 * slowPrint && !p_stopped) {  // 50 ms for 20 Hz, or slowed down for debug
     lastPrint = millis();
     char sc[200] = {0};
     sprintf(sc, "%10lu, %5.3f, %5.2f, %5.2f, %5.2f", millis(), prog, fracCPAP, fracPEEP, fracDual);
@@ -46,7 +46,8 @@ void loopOut()
   }
 }
 
-void showVoltages(int n)
+//void showVoltages(int n)
+void showVoltages(int n, bool setOffsets)
 {
   double v[6] = {0};
   double vs[6] = {0};
@@ -58,13 +59,17 @@ void showVoltages(int n)
   }
   for(int i = 0; i < 6; i++) vs[i] /= n;
   P("Voltages: Averaged (Instantaneous) ");
+  if(setOffsets) P(" (Setting Offsets!) ");
   int i = A_PX137 - A0;
-  P("Pressure on A"); P(i); P(": "); P(vs[i],4); 
+  if(setOffsets) p_pOffset = vs[i];
+  P("\n    Pressure on A"); P(i); P(": "); P(vs[i],4); 
   P(" ("); P(v[i],4); P(")  ");
   i = A_CAP_CPAP - A0;
+  if(setOffsets) p_qOffsetCPAP = vs[i];
   P("CPAP Flow on A"); P(i); P(": "); P(vs[i],4); 
   P(" ("); P(v[i],4); P(")  ");
-  i = A_CAP_CPAP - A0;
+  i = A_CAP_PEEP - A0;
+  if(setOffsets) p_qOffsetPEEP = vs[i];
   P("PEEP Flow on A"); P(i); P(": "); P(vs[i],4); 
   P(" ("); P(v[i],4); P(")  ");
   P("\n");

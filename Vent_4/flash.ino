@@ -115,7 +115,14 @@ int readCalFlash(){
 void wipeCalFlash(){
   // Delete the calibration file
   fatfs.remove("/vent/cal.txt");
-  // Restore the defaults
+  // Restore the starting values
+  p_pScale = 1.0;
+  p_pOffset = 0.0;
+  p_qScaleCPAP = 1.0;
+  p_qOffsetCPAP = 0.0;
+  p_qScalePEEP = 1.0;
+  p_qOffsetPEEP = 0.0;
+  
 }
 
 void setupExample() {

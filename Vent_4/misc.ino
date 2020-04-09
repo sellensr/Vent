@@ -63,6 +63,7 @@ void loopConsole(){
   }
 }
 
+void showVoltages(int n, bool setOffsets = false);
 /**************************************************************************/
 /*!
     @brief Respond to console commands
@@ -79,12 +80,18 @@ boolean doConsoleCommand(String cmd) {
   s.trim();                    // trimmed of white space
   int ival = val[0];           // an integer version of the first float arg
   unsigned long logPeriod;
-  int n = 1;
+  int n = 1, pDelta = 1;
   switch (c) {
   case 'a': // show analog voltages
+    if(!p_stopped){ 
+      P("ACK You must be stopped to run this command! Use X or x to enter stop mode.\n");
+      ret = true;
+      break;
+    }
     if(val[0] < 1) n = 10000;
     n = min(n,10000);
-    showVoltages(n);
+    if(val[0] < 0) showVoltages(n, true);
+    else showVoltages(n, false);
     ret = true;
     break;
   case 'A': // alarm condition
@@ -176,7 +183,69 @@ boolean doConsoleCommand(String cmd) {
   case 'R': // Run Mode
     p_closeCPAP = false;
     p_openAll = false;
-    PL("ACK Taking all valves to run mode.");
+    p_stopped = false;
+    PL("ACK Taking all valves and operations to run mode.");
+    ret = true;
+    break;
+  case 's': // Interactive Servo Angle Values
+    if(!p_stopped){ 
+      P("ACK You must be stopped to run this command! Use X or x to enter stop mode.\n");
+      ret = true;
+      break;
+    }
+    P("ACK Install valve gates in open position and hit return....\n");
+    while(!Serial.available()); while(Serial.available()) Serial.read();
+    aMaxCPAP = aMaxPEEP = aMid = 90;
+    aMinCPAP = aMinPEEP = aCloseCPAP = aClosePEEP = 90;
+    servoDual.write(aMid);
+    servoCPAP.write(aMaxCPAP);
+    servoPEEP.write(aMaxPEEP);
+    pDelta = 1;
+    while(pDelta != 0){
+      P("Enter change in CPAP valve angle, or just return to set as closed position.\n");
+      while(!Serial.available());
+      pDelta = Serial.parseInt();
+      aMinCPAP += pDelta;
+      P("New CPAP Closed Position: "); PL(aMinCPAP);
+      servoCPAP.write(aMinCPAP);
+    }
+    servoCPAP.write(aMaxCPAP);
+    pDelta = 1;
+    while(pDelta != 0){
+      P("Enter change in PEEP valve angle, or just return to set as closed position.\n");
+      while(!Serial.available());
+      pDelta = Serial.parseInt();
+      aMinPEEP += pDelta;
+      P("New PEEP Closed Position: "); PL(aMinPEEP);
+      servoPEEP.write(aMinPEEP);
+    }
+    servoPEEP.write(aMaxPEEP);
+    pDelta = 1;
+    while(pDelta != 0){
+      P("Enter change in Dual valve angle, or just return to set as CPAP closed position.\n");
+      while(!Serial.available());
+      pDelta = Serial.parseInt();
+      aCloseCPAP += pDelta;
+      P("New Dual Valve, CPAP Closed Position: "); PL(aCloseCPAP);
+      servoDual.write(aCloseCPAP);
+    }
+    servoDual.write(aMid);
+    pDelta = 1;
+    while(pDelta != 0){
+      P("Enter change in Dual valve angle, or just return to set as PEEP closed position.\n");
+      while(!Serial.available());
+      pDelta = Serial.parseInt();
+      aClosePEEP += pDelta;
+      P("New Dual Valve, PEEP Closed Position: "); PL(aClosePEEP);
+      servoDual.write(aClosePEEP);
+    }
+    aMid = (aCloseCPAP + aClosePEEP) / 2.0;
+    servoDual.write(aMid);
+
+    P("ACK Servo Angles set to\n");
+    P("    CPAP Valve: "); P(aMinCPAP);   P(" / "); P(aMaxCPAP);  P(" degrees\n");
+    P("    PEEP Valve: "); P(aMinPEEP);   P(" / "); P(aMaxPEEP);  P(" degrees\n");
+    P("    Dual Valve: "); P(aCloseCPAP); P(" / "); P(aMid,0);    P(" / ");       P(aClosePEEP);  P(" degrees\n"); 
     ret = true;
     break;
   case 'S': // Servo Angle Values -- don't accept zeros!
@@ -219,20 +288,22 @@ boolean doConsoleCommand(String cmd) {
       ret = false;
     }
     else {
-      P("ACK wiping calibration settings file and returning to defaults on restart.\n");
+      P("ACK wiping calibration settings file and returning to pre-configuration values.\n");
       wipeCalFlash();
       ret = true;
     }
     break;
-  case 'x': // Close CPAP
+  case 'x': // open all
     p_openAll = true;
     p_closeCPAP = false;
+    p_stopped = true;
     PL("ACK All valves going to open position.");
     ret = true;
     break;
   case 'X': // Close CPAP
     p_closeCPAP = true;
     p_openAll = false;
+    p_stopped = true;
     PL("ACK CPAP valve going to closed position.");
     ret = true;
     break;
@@ -252,7 +323,7 @@ boolean doConsoleCommand(String cmd) {
 /**************************************************************************/
 void listConsoleCommands() {
   P("\nApplication specific commands include:\n");
-  P("  a - read and display (a)nalog voltages, averaging over n values, e.g. a10\n");
+  P("  a - read and display (a)nalog voltages, averaging over n values, e.g. a10\n      Set offset values if n is less than 0, e.g. a-1\n");
   P("  A - set (A)larm condition on (positive argument),  off (negative argument),\n      or just show condition (0 argument), e.g. A-1\n");
   P("  C - set desired (C)alibration offsets and scale factors for patient pressure, CPAP flow, and PEEP flow\n      e.g. C1.2435,1.2532,1.3121,90.3,50.4,42.1\n");
   P("  e - set desired patient (e)xpiratory times target, high/low limits [ms], e.g. e2500,4500,1000\n");
@@ -262,6 +333,7 @@ void listConsoleCommands() {
   P("  P - set print mode, positive for plotter mode on, negative for no console output, \n        0 for plotter mode off, e.g. P1\n");
   P("  r - (r)ead in the calibration, servo angles, and other settings from the file, e.g. r\n");
   P("  R - set to normal (R)un mode, e.g. R\n");
+  P("  s - set closed/open settings for CPAP and PEEP valve (S)ervos interactively, e.g. s\n");
   P("  S - set closed/open settings for CPAP and PEEP valve (S)ervos, e.g. S130,180,90,140,66,98\n");
   P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
   P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");
