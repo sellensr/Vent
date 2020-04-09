@@ -178,10 +178,10 @@ double v_tauW = 0.1;          ///< the smoothing weight factor to use this cycle
 
 // p_ for all elements that are set parameters for desired performance
 double p_iph = IP_MAX;        ///< the inspiration pressure upper bound.
-double p_ipl = 5.0;           ///< the inspiration pressure lower bound -- PEEP setting.
+double p_ipl = 0.0;           ///< the inspiration pressure lower bound -- PEEP setting, no action
 double p_iphTol = 0.5;        ///< difference from p_eph required to trigger start of expiration if P > p_iph - p_iphTol or alarm if beyond
-double p_eph = EP_MAX;        ///< the expiration pressure upper bound.
-double p_epl = 7.0;           ///< the expiration pressure lower bound -- PEEP setting.
+double p_eph = EP_MAX;        ///< the expiration pressure upper bound, no action
+double p_epl = 0.0;           ///< the expiration pressure lower bound -- PEEP setting.
 double p_eplTol = 0.5;        ///< difference from p_epl required to trigger start of new breath if P < p_epl + p_eplTol or alarm if beyond
 int p_it = PB_DEF * INF_DEF;  ///< inspiration time setting, high/low limits
 int p_ith = IT_MAX;

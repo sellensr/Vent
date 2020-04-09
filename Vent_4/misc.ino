@@ -21,6 +21,41 @@
 
 /**************************************************************************/
 /*!
+    @brief Show a list of possible commands
+    @param none
+    @return none
+*/
+/**************************************************************************/
+void listConsoleCommands() {
+  P("\nApplication specific commands include:\n");
+  P("  a - read and display (a)nalog voltages, averaging over n values, e.g. a10\n      Set offset values if n is less than 0, e.g. a-1\n");
+  P("  A - set (A)larm condition on (positive argument),  off (negative argument),\n      or just show condition (0 argument), e.g. A-1\n");
+  P("  C - set desired (C)alibration offsets and scale factors for patient pressure, CPAP flow, and PEEP flow\n      e.g. C1.2435,1.2532,1.3121,90.3,50.4,42.1\n");
+  P("  e - set desired patient (e)xpiratory times target, high/low limits [ms], e.g. e2500,4500,1000\n");
+  P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
+  P("  f - read and display (f)low values, averaging over n values, e.g. f10\n");
+  P("  i - set desired patient (i)nspiratory times target, high/low limits [ms], e.g. i2000,3500,1200\n");
+  P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
+  P("  P - set print mode, positive for plotter mode on, negative for no console output, \n        0 for plotter mode off, e.g. P1\n");
+  P("  r - (r)ead in the calibration, servo angles, and other settings from the file, e.g. r\n");
+  P("  R - set to normal (R)un mode, e.g. R\n");
+  P("  s - set closed/open settings for CPAP and PEEP valve (S)ervos interactively, e.g. s\n");
+  P("  S - set closed/open settings for CPAP and PEEP valve (S)ervos, e.g. S130,180,90,140,66,98\n");
+  P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
+  P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");
+  P("  w - (w)rite out the calibration, servo angles, and other settings to the file, e.g. w\n");
+  P("  W - (W)ipe out the calibration, servo angles, and other settings and return to defaults, e.g. W99\n");
+  P("  x - open all valves, e.g. x\n");
+  P("  X - close the CPAP valve, e.g. X\n");
+  P("\nNormal data lines start with a numeral. All command lines received will generate at least\n");
+  P("one line of text in return. A line starting with ACK indicates a recognized command was received\n");
+  P("and acted on, as described in the remainder of the line. It does not necessarily mean values were\n");
+  P("changed, as some or all may have been outside permitted limits. A line starting with NOACK\n");
+  P("indicates an unrecognized line was received. Other human readable lines can be ignored.\n\n");
+}
+
+/**************************************************************************/
+/*!
     @brief Handle console input/output functions on USB and on Serial1 for
             display unit.
     @param none
@@ -139,6 +174,17 @@ boolean doConsoleCommand(String cmd) {
     if (val[2] >= 0) p_eplTol = min(val[2], 5);
     P("ACK Expiration Pressures set to: ");
     P(p_eph); P(" / "); P(p_epl);  P(" / "); P(p_eplTol); P(" cm H2O\n");
+    ret = true;
+    break;
+  case 'f': // show flow values
+    if(!p_stopped){ 
+      P("ACK You must be stopped to run this command! Use X or x to enter stop mode.\n");
+      ret = true;
+      break;
+    }
+    if(val[0] < 1) n = 10000;
+    n = min(n,10000);
+    showFlows(n);
     ret = true;
     break;
   case 'i': // Inspiratory Times
@@ -312,40 +358,6 @@ boolean doConsoleCommand(String cmd) {
     break;
   }
   return ret; // true if we found a command to execute!
-}
-
-/**************************************************************************/
-/*!
-    @brief Show a list of possible commands
-    @param none
-    @return none
-*/
-/**************************************************************************/
-void listConsoleCommands() {
-  P("\nApplication specific commands include:\n");
-  P("  a - read and display (a)nalog voltages, averaging over n values, e.g. a10\n      Set offset values if n is less than 0, e.g. a-1\n");
-  P("  A - set (A)larm condition on (positive argument),  off (negative argument),\n      or just show condition (0 argument), e.g. A-1\n");
-  P("  C - set desired (C)alibration offsets and scale factors for patient pressure, CPAP flow, and PEEP flow\n      e.g. C1.2435,1.2532,1.3121,90.3,50.4,42.1\n");
-  P("  e - set desired patient (e)xpiratory times target, high/low limits [ms], e.g. e2500,4500,1000\n");
-  P("  E - set desired patient (E)xpiratory pressures high/low/trig tol [cm H2O], e.g. E28.2,6.3,1.0\n");
-  P("  i - set desired patient (i)nspiratory times target, high/low limits [ms], e.g. i2000,3500,1200\n");
-  P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
-  P("  P - set print mode, positive for plotter mode on, negative for no console output, \n        0 for plotter mode off, e.g. P1\n");
-  P("  r - (r)ead in the calibration, servo angles, and other settings from the file, e.g. r\n");
-  P("  R - set to normal (R)un mode, e.g. R\n");
-  P("  s - set closed/open settings for CPAP and PEEP valve (S)ervos interactively, e.g. s\n");
-  P("  S - set closed/open settings for CPAP and PEEP valve (S)ervos, e.g. S130,180,90,140,66,98\n");
-  P("  t - set desired inspiration/expiration (t)imes [ms], e.g. t1000,2000\n");
-  P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");
-  P("  w - (w)rite out the calibration, servo angles, and other settings to the file, e.g. w\n");
-  P("  W - (W)ipe out the calibration, servo angles, and other settings and return to defaults, e.g. W99\n");
-  P("  x - open all valves, e.g. x\n");
-  P("  X - close the CPAP valve, e.g. X\n");
-  P("\nNormal data lines start with a numeral. All command lines received will generate at least\n");
-  P("one line of text in return. A line starting with ACK indicates a recognized command was received\n");
-  P("and acted on, as described in the remainder of the line. It does not necessarily mean values were\n");
-  P("changed, as some or all may have been outside permitted limits. A line starting with NOACK\n");
-  P("indicates an unrecognized line was received. Other human readable lines can be ignored.\n\n");
 }
 
 /**************************************************************************/

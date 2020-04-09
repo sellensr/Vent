@@ -46,7 +46,6 @@ void loopOut()
   }
 }
 
-//void showVoltages(int n)
 void showVoltages(int n, bool setOffsets)
 {
   double v[6] = {0};
@@ -72,5 +71,22 @@ void showVoltages(int n, bool setOffsets)
   if(setOffsets) p_qOffsetPEEP = vs[i];
   P("PEEP Flow on A"); P(i); P(": "); P(vs[i],4); 
   P(" ("); P(v[i],4); P(")  ");
+  P("\n");
+}
+
+void showFlows(int n)
+{
+  double ps = 0, qcs = 0, qps = 0;
+  for(int j = 0; j < n; j++){
+    ps += getP();
+    qcs += getQCPAP();
+    qps += getQPEEP();
+  }
+  ps /= n;
+  qcs /= n;
+  qps /= n;
+  P("\n    Patient Pressure [cm H2O]: "); P(ps,6); 
+  P("\n     CPAP Flow [litres / min]: "); P(qcs,6); 
+  P("\n     PEEP Flow [litres / min]: "); P(qps,6); 
   P("\n");
 }

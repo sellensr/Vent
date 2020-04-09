@@ -159,4 +159,10 @@ double getQ(){  // return the current value for patient flow in litres / minute
   v_qPEEP = (v_PEEPv - p_qOffsetPEEP) * p_qScalePEEP;  // minus return flow on the PEEP side
   return v_qCPAP - v_qPEEP;
 }
+double getQCPAP(){  // return the instantaneous value for CPAP side flow in litres / minute
+  return (uno.getV(A_CAP_CPAP) - p_qOffsetCPAP) * p_qScaleCPAP;  // flow on the CPAP side
+}
+double getQPEEP(){  // return the instantaneous value for PEEP side flow in litres / minute
+  return (uno.getV(A_CAP_PEEP) - p_qOffsetPEEP) * p_qScalePEEP;  // flow on the PEEP side
+}
 #endif

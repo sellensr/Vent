@@ -73,7 +73,7 @@ void setupFlash(){
 }
 
 int writeCalFlash(){
-  wipeCalFlash();   // delete the old file
+  delCalFlash();   // delete the old file
   // Create a calibration file in the vent directory and write data to it.
   File writeFile = fatfs.open("/vent/cal.txt", FILE_WRITE);
   if (!writeFile) {
@@ -85,9 +85,11 @@ int writeCalFlash(){
   // write a calibration constants line
   sprintf(sc,"C%7.4f,%7.4f,%7.4f,%7.2f,%7.2f,%7.2f\n",p_pOffset,p_qOffsetCPAP,p_qOffsetPEEP,p_pScale,p_qScaleCPAP,p_qScalePEEP);
   writeFile.print(sc);
+  PR(sc);
   // write a servo angles line
   sprintf(sc,"S%d,%d,%d,%d,%d,%d\n",aMinCPAP,aMaxCPAP,aMinPEEP,aMaxPEEP,aCloseCPAP,aClosePEEP);
   writeFile.print(sc);
+  PR(sc);
   // Close the file when finished writing.
   writeFile.close();
   Serial.println("Wrote to file /vent/cal.txt!");
@@ -110,6 +112,11 @@ int readCalFlash(){
     line = readFile.readStringUntil('\n');
   }
   return 0;
+}
+
+void delCalFlash(){
+  // Delete the calibration file
+  fatfs.remove("/vent/cal.txt");
 }
 
 void wipeCalFlash(){
