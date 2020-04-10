@@ -12,7 +12,7 @@ void loopOut()
   static unsigned long lastConsole = 0;         // set to millis() when the last output was sent to Serial
 
 /***********************SEND DATA TO CONSOLE / PLOTTER / DISPLAY UNIT**************/  
-  if (millis()-lastPrint > 50 * slowPrint && !p_stopped) {  // 50 ms for 20 Hz, or slowed down for debug
+  if (millis()-lastPrint > 50 * slowPrint) {  // 50 ms for 20 Hz, or slowed down for debug
     lastPrint = millis();
     char sc[200] = {0};
     sprintf(sc, "%10lu, %5.3f, %5.2f, %5.2f, %5.2f", millis(), prog, fracCPAP, fracPEEP, fracDual);

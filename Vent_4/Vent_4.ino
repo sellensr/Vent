@@ -13,7 +13,14 @@
 
   Vent_3 FROZEN @ 12:11 2020-04-03 as submitted for challenge. Moving on to Vent_4
 
-  
+  Vent requires some libraries you may not have installed. These two can be installed
+  via Tools/Manage Libraries... inside the IDE. Search for sdFat and be sure to install
+  the Adafruit fork of the original. 
+  #include <SdFat.h>                // https://github.com/adafruit/SdFat
+  #include <Adafruit_SPIFlash.h>    // https://github.com/adafruit/Adafruit_SPIFlash
+  This one you will need to download from github and copy into your libraries folder.
+  #include "RWS_UNO.h"    // https://github.com/sellensr/RWS_UNO
+
 
   @section author Author
 
@@ -27,7 +34,7 @@
   critical to life or health, or protection of property.
 */
 /**************************************************************************/
-#include "RWS_UNO.h"
+#include "RWS_UNO.h"    // https://github.com/sellensr/RWS_UNO
 #include <Servo.h>
 /****************SET INSTRUMENTATION TYPES HERE****************************/
 // define only one source for P or else you will get a redefinition of 'xxx' error

@@ -1,6 +1,6 @@
 #include <SPI.h>
-#include <SdFat.h>
-#include <Adafruit_SPIFlash.h>
+#include <SdFat.h>                // https://github.com/adafruit/SdFat
+#include <Adafruit_SPIFlash.h>    // https://github.com/adafruit/Adafruit_SPIFlash
 // Largely copied from the SdFat_full_usage example of the Adafruit_SPIFlash library.
 
 // Configuration of the flash chip pins and flash fatfs object.
