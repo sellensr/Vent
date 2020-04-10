@@ -215,18 +215,18 @@ double p_qOffsetPEEP = OFFSET_CAP_PEEP; ///< volts at zero differential pressure
 double p_tau = 0.10;                    ///< instrumentation smoothing time constant [s]
 
 // stackable error codes that will fit into v_alarm
-#define VENT_NO_ERROR   0b0                 ///< There is no Error
-#define VENT_IPL_ERROR  0b0000000000000001  ///< Inspiration Pressure Low < p_ipl
-#define VENT_IPH_ERROR  0b0000000000000010  ///< Inspiration Pressure High > p_iph
-#define VENT_ITS_ERROR  0b0000000000000100  ///< Inspiration Time Short < p_itl
-#define VENT_ITL_ERROR  0b0000000000001000  ///< Inspiration Time Long > p_ith
-#define VENT_EPL_ERROR  0b0000000000010000  ///< Expiration Pressure Low < p_epl
-#define VENT_EPH_ERROR  0b0000000000100000  ///< Expiration Pressure High > p_eph
-#define VENT_ETS_ERROR  0b0000000001000000  ///< Expiration Time Short < p_etl
-#define VENT_ETL_ERROR  0b0000000010000000  ///< Expiration Time Long > p_eth
-#define VENT_SLOW_ERROR 0b0010000000000000  ///< Loop is not executing in under ALARM_DELAY_LOOP
-#define VENT_DISP_ERROR 0b0100000000000000  ///< Display/Console Incognito longer than ALARM_DELAY_DISPLAY
-#define VENT_EXT_ERROR  0b1000000000000000  ///< External Error
+#define VENT_NO_ERROR   0b0                 ///<     0 There is no Error
+#define VENT_IPL_ERROR  0b0000000000000001  ///<     1 Inspiration Pressure Low < p_ipl
+#define VENT_IPH_ERROR  0b0000000000000010  ///<     2 Inspiration Pressure High > p_iph
+#define VENT_ITS_ERROR  0b0000000000000100  ///<     4 Inspiration Time Short < p_itl
+#define VENT_ITL_ERROR  0b0000000000001000  ///<     8 Inspiration Time Long > p_ith
+#define VENT_EPL_ERROR  0b0000000000010000  ///<    16 Expiration Pressure Low < p_epl
+#define VENT_EPH_ERROR  0b0000000000100000  ///<    32 Expiration Pressure High > p_eph
+#define VENT_ETS_ERROR  0b0000000001000000  ///<    64 Expiration Time Short < p_etl
+#define VENT_ETL_ERROR  0b0000000010000000  ///<   128 Expiration Time Long > p_eth
+#define VENT_SLOW_ERROR 0b0010000000000000  ///<  8192 Loop is not executing in under ALARM_DELAY_LOOP
+#define VENT_DISP_ERROR 0b0100000000000000  ///< 16384 Display/Console Incognito longer than ALARM_DELAY_DISPLAY
+#define VENT_EXT_ERROR  0b1000000000000000  ///< 32768 External Error
 
 /**************************************************************************/
 /*!

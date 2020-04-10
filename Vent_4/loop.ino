@@ -43,7 +43,10 @@ void loop()
   static bool startedInspiration = false;       // set false at start of breath, then true once we have inspiration at pressure
   static bool stoppedInspiration = false;       // set false at start of breath, then true once inspiration is stopped
 
-/*********************UPDATE MEASUREMENTS AND PARAMETERS************************/  
+/*********************UPDATE MEASUREMENTS AND PARAMETERS************************/ 
+
+  // if(millis() < 10000) delay(2000);  // force a slow loop() error on startup as a test
+ 
   uno.run();    // keep track of things
   
   if(loopConsole()) lastCommand = millis();           // check for console input and note time
@@ -51,8 +54,9 @@ void loop()
       if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already
       v_alarm = v_alarm | VENT_DISP_ERROR;            // set the appropriate alarm bit
   } else v_alarm = v_alarm & ~VENT_DISP_ERROR;        // reset the alarm bit
-  
-  if (uno.dtAvg()/1000 > ALARM_DELAY_LOOP){           // check for loop() rate too slow
+
+  if (uno.dtAvg()/1000 > ALARM_DELAY_LOOP             // check for rolling average loop() rate too slow 
+    || uno.dt()/1000 > ALARM_DELAY_LOOP * 5){         // be more tolerant of one slow loop()
       if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already
       v_alarm = v_alarm | VENT_SLOW_ERROR;            // set the appropriate alarm bit
   } else v_alarm = v_alarm & ~VENT_SLOW_ERROR;        // reset the alarm bit
