@@ -98,9 +98,10 @@ RWS_UNO uno = RWS_UNO();
 #define IP_MIN 2        ///< Inspiration pressure min
 #define EP_MIN 1        ///< Expiration pressure min
 
-#define ALARM_DELAY 3000  ///< don't alarm until the condition has lasted this long
-#define ALARM_LENGTH 20  ///< don't make an alarm sound longer than this
-
+#define ALARM_DELAY         3000  ///< [ms] don't alarm until the condition has lasted this long
+#define ALARM_LENGTH          20  ///< [ms] don't make an alarm sound longer than this
+#define ALARM_DELAY_DISPLAY 3000  /// [ms] don't set the alarm condition until the display has been silent this long
+#define ALARM_DELAY_LOOP     100  /// [ms] set the alarm condition if loop is taking longer than this
 
 // Servo geometry will depend on the physical assembly of each unit and variability between servos.
 // These values will have to be set for each individual machine after final assembly.
@@ -223,6 +224,8 @@ double p_tau = 0.10;                    ///< instrumentation smoothing time cons
 #define VENT_EPH_ERROR  0b0000000000100000  ///< Expiration Pressure High > p_eph
 #define VENT_ETS_ERROR  0b0000000001000000  ///< Expiration Time Short < p_etl
 #define VENT_ETL_ERROR  0b0000000010000000  ///< Expiration Time Long > p_eth
+#define VENT_SLOW_ERROR 0b0010000000000000  ///< Loop is not executing in under ALARM_DELAY_LOOP
+#define VENT_DISP_ERROR 0b0100000000000000  ///< Display/Console Incognito longer than ALARM_DELAY_DISPLAY
 #define VENT_EXT_ERROR  0b1000000000000000  ///< External Error
 
 /**************************************************************************/

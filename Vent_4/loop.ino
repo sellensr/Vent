@@ -30,6 +30,7 @@ void loop()
   // use unsigned long for millis() values, but int for short times so positive/negative differences calculate correctly
   static unsigned long lastPrint = 0;           // set to millis() when the last output was sent to Serial1
   static unsigned long lastConsole = 0;         // set to millis() when the last output was sent to Serial
+  static unsigned long lastCommand = 0;         // set to millis() when the last Command input was received
   static int perBreath = PB_DEF;                // the number of ms per timed breath, updated at the start of every breath
   static unsigned long startBreath = 0;         // set to millis() at the beginning of each breath
   // All these times are set to zero at the beginning of each breath, then set to a millis() value as the breath progresses
@@ -44,9 +45,18 @@ void loop()
 
 /*********************UPDATE MEASUREMENTS AND PARAMETERS************************/  
   uno.run();    // keep track of things
-  loopConsole();// check for console input
-  // Test for loop rate
-  // if (uno.dtAvg() > 100000) PR("Taking longer than 100 ms per loop!\n");
+  
+  if(loopConsole()) lastCommand = millis();           // check for console input and note time
+  if (millis() - lastCommand > ALARM_DELAY_DISPLAY){  // display is incognito
+      if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already
+      v_alarm = v_alarm | VENT_DISP_ERROR;            // set the appropriate alarm bit
+  } else v_alarm = v_alarm & ~VENT_DISP_ERROR;        // reset the alarm bit
+  
+  if (uno.dtAvg()/1000 > ALARM_DELAY_LOOP){           // check for loop() rate too slow
+      if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already
+      v_alarm = v_alarm | VENT_SLOW_ERROR;            // set the appropriate alarm bit
+  } else v_alarm = v_alarm & ~VENT_SLOW_ERROR;        // reset the alarm bit
+
   v_tauW = min(1.,(double) uno.dt() / p_tau / 1000000.);   // weight to give the latest reading of a in smoothing
 
   // Measure current state

@@ -60,13 +60,15 @@ void listConsoleCommands() {
     @brief Handle console input/output functions on USB and on Serial1 for
             display unit.
     @param none
-    @return none
+    @return true if a command line was received, false otherwise
 */
 /**************************************************************************/
-void loopConsole(){
+bool loopConsole(){
   static String ci = "";
+  bool ret = false;
   if (readConsoleCommand(
           &ci)) { // returns false quickly if there has been no EOL yet
+    ret = true;
     P("\nFrom Console:");
     PL(ci);
     // or just send the whole String to one of these functions for parsing and
@@ -84,6 +86,7 @@ void loopConsole(){
     // exactly the same, except for commands input from Serial1 to ci1
     static String ci1 = "";
     if (readConsoleCommand1(&ci1)) {
+      ret = true;
       P("\nFrom Serial1:");
       PL(ci1);
       // or just send the whole String to one of these functions for parsing and
@@ -97,6 +100,7 @@ void loopConsole(){
                // string
     }
   }
+  return ret;
 }
 
 void showVoltages(int n, bool setOffsets = false);
