@@ -37,6 +37,7 @@ void listConsoleCommands() {
   P("  f - read and display (f)low values, averaging over n values, e.g. f10\n");
   P("  i - set desired patient (i)nspiratory times target, high/low limits [ms], e.g. i2000,3500,1200\n");
   P("  I - set desired patient (I)nspiratory pressures high/low/trig tol [cm H2O], e.g. I38.2,16.3,1.0\n");
+  P("  M - set desired hardware (M)odel and serial numbers, e.g. M3,30000001\n");
   P("  P - set print mode, positive for plotter mode on, negative for no console output, \n        0 for plotter mode off, e.g. P1\n");
   P("  r - (r)ead in the calibration, servo angles, and other settings from the file, e.g. r\n");
   P("  R - set to normal (R)un mode, e.g. R\n");
@@ -215,6 +216,19 @@ boolean doConsoleCommand(String cmd) {
     P(p_iph); P(" / "); P(p_ipl);  P(" / "); P(p_iphTol); P(" cm H2O\n");
     ret = true;
     break;
+  case 'M': // Model / Serial numbers
+    if (val[0] > 0 && val[0] < 100){ 
+      p_modelNumber = val[0];
+      p_serialNumber = p_serialNumber % 10000000 + 10000000 * p_modelNumber;
+    }
+    n = val[1];
+    n = n % 10000000;
+    if (n > 0) p_serialNumber = 10000000 * p_modelNumber + n;
+    PR("ACK Model / Serial Numbers set to: ");
+    PR(p_modelNumber); PR(" / "); PL(p_serialNumber);
+    PR("YGK Modular Ventilator Firmware Version: "); PL(VENT_VERSION); 
+    ret = true;
+    break;
   case 'P': // plotter mode
     if (val[0] > 0){
       p_plotterMode = true;
@@ -239,10 +253,10 @@ boolean doConsoleCommand(String cmd) {
     ret = true;
     break;
   case 'R': // Run Mode
+    if(p_stopped || p_closeCPAP || p_openAll) PL("ACK Taking all valves and operations to run mode.");
     p_closeCPAP = false;
     p_openAll = false;
     p_stopped = false;
-    PL("ACK Taking all valves and operations to run mode.");
     ret = true;
     break;
   case 's': // Interactive Servo Angle Values
@@ -251,14 +265,14 @@ boolean doConsoleCommand(String cmd) {
       ret = true;
       break;
     }
-    P("ACK Install valve gates in open position and hit return....\n");
-    while(!Serial.available()); while(Serial.available()) Serial.read();
     aMaxCPAP = aMaxPEEP = aMid = 90;
     aMinCPAP = aMinPEEP = aCloseCPAP = aClosePEEP = 90;
     servoDual.write(aMid);
     servoCPAP.write(aMaxCPAP);
     servoPEEP.write(aMaxPEEP);
     pDelta = 1;
+    P("ACK Install valve gates in open position and hit return....\n");
+    while(!Serial.available()); while(Serial.available()) Serial.read();
     while(pDelta != 0){
       P("Enter change in CPAP valve angle, or just return to set as closed position.\n");
       while(!Serial.available());
@@ -352,6 +366,7 @@ boolean doConsoleCommand(String cmd) {
     }
     break;
   case 'x': // open all
+    v_lastStop = millis();
     p_openAll = true;
     p_closeCPAP = false;
     p_stopped = true;
@@ -359,6 +374,7 @@ boolean doConsoleCommand(String cmd) {
     ret = true;
     break;
   case 'X': // Close CPAP
+    v_lastStop = millis();
     p_closeCPAP = true;
     p_openAll = false;
     p_stopped = true;

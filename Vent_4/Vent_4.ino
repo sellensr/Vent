@@ -34,6 +34,7 @@
   critical to life or health, or protection of property.
 */
 /**************************************************************************/
+#define VENT_VERSION "0.4.5"  // release / code freeze, e.g. 4 for Vent_4 / update
 #include "RWS_UNO.h"    // https://github.com/sellensr/RWS_UNO
 #include <Servo.h>
 /****************SET INSTRUMENTATION TYPES HERE****************************/
@@ -97,6 +98,8 @@ RWS_UNO uno = RWS_UNO();
 #define EP_MAX 40       ///< Expiration pressure max
 #define IP_MIN 2        ///< Inspiration pressure min
 #define EP_MIN 1        ///< Expiration pressure min
+
+#define STOP_MAX 30000  ///< Max time in stop mode
 
 #define ALARM_DELAY         3000  ///< [ms] don't alarm until the condition has lasted this long
 #define ALARM_LENGTH          20  ///< [ms] don't make an alarm sound longer than this
@@ -182,6 +185,7 @@ double v_PEEPv = 0.;          ///< measured PEEP side flow element voltage
 int v_ie = 0;                 ///< set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
 unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
 unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
+unsigned long v_lastStop = 0;       ///< set to millis() when the last Stop Command input was received
 double v_tauW = 0.001;          ///< the smoothing weight factor to use this cycle for time constant p_tau
 
 // p_ for all elements that are set parameters for desired performance
@@ -214,6 +218,11 @@ double p_qScalePEEP = SCALE_CAP_PEEP;   ///< (l/min) / volt for capillary input 
 double p_qOffsetPEEP = OFFSET_CAP_PEEP; ///< volts at zero differential pressure on PEEP side
 double p_tau = 0.10;                    ///< instrumentation smoothing time constant [s]
 
+int p_modelNumber = 3;          ///< Hardware model number, 1 was abandoned, 2 was single servo and venturi, 
+                                //   3 is single or double servo gates with flow elements in both feeds 
+                          
+int p_serialNumber = 30000001;  ///< Hardware serial number is model number * 10000000 + unique integer
+
 // stackable error codes that will fit into v_alarm
 #define VENT_NO_ERROR   0b0                 ///<     0 There is no Error
 #define VENT_IPL_ERROR  0b0000000000000001  ///<     1 Inspiration Pressure Low < p_ipl
@@ -224,6 +233,7 @@ double p_tau = 0.10;                    ///< instrumentation smoothing time cons
 #define VENT_EPH_ERROR  0b0000000000100000  ///<    32 Expiration Pressure High > p_eph
 #define VENT_ETS_ERROR  0b0000000001000000  ///<    64 Expiration Time Short < p_etl
 #define VENT_ETL_ERROR  0b0000000010000000  ///<   128 Expiration Time Long > p_eth
+#define VENT_STOP_WARN  0b0001000000000000  ///<  4096 Going back to run mode soon
 #define VENT_SLOW_ERROR 0b0010000000000000  ///<  8192 Loop is not executing in under ALARM_DELAY_LOOP
 #define VENT_DISP_ERROR 0b0100000000000000  ///< 16384 Display/Console Incognito longer than ALARM_DELAY_DISPLAY
 #define VENT_EXT_ERROR  0b1000000000000000  ///< 32768 External Error
@@ -240,9 +250,10 @@ void setup()
   uno.begin(115200);      ///< Start the RWS_UNO library object
   Serial1.begin(115200);  ///< for communication to display unit or other supervisor. RX-->GND for none
   while(!Serial1 && millis() < 5000);
-
-  Serial.print("\n\nRWS Vent_4\n\n");
-  setupFlash();
+  setupFlash();   // reads all the calibration data, hardware model and serial numbers
+  PR("\n\nYGK Modular Ventilator\n\nFirmware Version: "); PR(VENT_VERSION); 
+  PR("   Model: "); PR(p_modelNumber); PR("    Serial Number: "); PR(p_serialNumber);
+  PR("\n\n");
   setupP();
   setupQ();
   servoDual.attach(9);    ///< actuates both valve bodies alternately 9

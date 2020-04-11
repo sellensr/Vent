@@ -48,7 +48,17 @@ void loop()
   // if(millis() < 10000) delay(2000);  // force a slow loop() error on startup as a test
  
   uno.run();    // keep track of things
-  
+
+  if(millis() - v_lastStop > STOP_MAX){
+    doConsoleCommand("R");  // re-enter run mode automatically
+  }
+
+  if (millis() - v_lastStop > STOP_MAX - 2 * ALARM_DELAY_DISPLAY
+      && p_stopped){  // back to run mode soon
+      if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already
+      v_alarm = v_alarm | VENT_STOP_WARN;            // set the appropriate alarm bit
+  } else v_alarm = v_alarm & ~VENT_STOP_WARN;        // reset the alarm bit
+
   if(loopConsole()) lastCommand = millis();           // check for console input and note time
   if (millis() - lastCommand > ALARM_DELAY_DISPLAY){  // display is incognito
       if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already

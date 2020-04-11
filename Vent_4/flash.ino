@@ -90,6 +90,10 @@ int writeCalFlash(){
   sprintf(sc,"S%d,%d,%d,%d,%d,%d\n",aMinCPAP,aMaxCPAP,aMinPEEP,aMaxPEEP,aCloseCPAP,aClosePEEP);
   writeFile.print(sc);
   PR(sc);
+  // write a model / serial numbers line
+  sprintf(sc,"M%d,%d\n", p_modelNumber, p_serialNumber);
+  writeFile.print(sc);
+  PR(sc);
   // Close the file when finished writing.
   writeFile.close();
   Serial.println("Wrote to file /vent/cal.txt!");
