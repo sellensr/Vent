@@ -81,7 +81,7 @@ int writeCalFlash(){
     return -1;
   }
   Serial.println("Opened file /vent/cal.txt for writing/appending...");
-  char sc[200] = {0};
+  char sc[MAX_COMMAND_LENGTH] = {0};
   // write a calibration constants line
   sprintf(sc,"C%7.4f,%7.4f,%7.4f,%7.2f,%7.2f,%7.2f\n",p_pOffset,p_qOffsetCPAP,p_qOffsetPEEP,p_pScale,p_qScaleCPAP,p_qScalePEEP);
   writeFile.print(sc);

@@ -79,7 +79,7 @@
 #define BLUE_BUTTON_PIN     12
 #define YELLOW_BUTTON_PIN    3
 #define RED_BUTTON_PIN       4
-
+#define MAX_COMMAND_LENGTH 200    // no lines longer than this for commands or output
 
 
 RWS_UNO uno = RWS_UNO();

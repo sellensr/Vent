@@ -14,7 +14,7 @@ void loopOut()
 /***********************SEND DATA TO CONSOLE / PLOTTER / DISPLAY UNIT**************/  
   if (millis()-lastPrint > 50 * slowPrint) {  // 50 ms for 20 Hz, or slowed down for debug
     lastPrint = millis();
-    char sc[200] = {0};
+    char sc[MAX_COMMAND_LENGTH] = {0};
     sprintf(sc, "%10lu, %5.3f, %5.2f, %5.2f, %5.2f", millis(), prog, fracCPAP, fracPEEP, fracDual);
     sprintf(sc, "%s, %5.3f, %5.2f, %5.1f", sc, v_o2, v_p, v_q);
     sprintf(sc, "%s, %5.2f, %5.2f, %5u", sc, v_ipp, v_ipl, v_it);

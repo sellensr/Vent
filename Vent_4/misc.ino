@@ -48,6 +48,7 @@ void listConsoleCommands() {
   P("  W - (W)ipe out the calibration, servo angles, and other settings and return to defaults, e.g. W99\n");
   P("  x - open all valves, e.g. x\n");
   P("  X - close the CPAP valve, e.g. X\n");
+  P("  Z - do nothing, can be sent as a heartbeat, e.g. Z");
   P("\nNormal data lines start with a numeral. All command lines received will generate at least\n");
   P("one line of text in return. A line starting with ACK indicates a recognized command was received\n");
   P("and acted on, as described in the remainder of the line. It does not necessarily mean values were\n");
@@ -364,6 +365,10 @@ boolean doConsoleCommand(String cmd) {
     PL("ACK CPAP valve going to closed position.");
     ret = true;
     break;
+  case 'Z': // Do nothing, heartbeat
+    PL("ACK Z command takes no action.");
+    ret = true;
+    break;
   default:
     ret = false; // didn't recognize command
     break;
@@ -388,6 +393,8 @@ boolean readConsoleCommand(String *consoleIn) {
         return true; // we got to the end of the line
     } else
       *consoleIn += c;
+      // If it gets to long, throw it away and make the next line a no action command
+      if((*consoleIn).length() > MAX_COMMAND_LENGTH) *consoleIn = "Z";
   }
   return false;
 }
@@ -407,6 +414,7 @@ boolean readConsoleCommand1(String *consoleIn) {
         return true; // we got to the end of the line
     } else
       *consoleIn += c;
+      if((*consoleIn).length() > MAX_COMMAND_LENGTH) *consoleIn = "Z";
   }
   return false;
 }
