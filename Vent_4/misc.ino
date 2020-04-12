@@ -257,6 +257,7 @@ boolean doConsoleCommand(String cmd) {
     p_closeCPAP = false;
     p_openAll = false;
     p_stopped = false;
+    p_config = false;
     ret = true;
     break;
   case 's': // Interactive Servo Angle Values
@@ -370,7 +371,8 @@ boolean doConsoleCommand(String cmd) {
     p_openAll = true;
     p_closeCPAP = false;
     p_stopped = true;
-    PL("ACK All valves going to open position.");
+    p_config = true;
+    PL("ACK All valves going to open position for configuration.");
     ret = true;
     break;
   case 'X': // Close CPAP

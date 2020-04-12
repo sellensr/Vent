@@ -55,8 +55,9 @@
 /***************SET PINS HERE TO MATCH HARDWARE CONFIGURATION**************/
 // The calibration scale and offset values will be different for every combination of transducers.
 // read the battery state from a voltage divider
-#define A_BAT A3
+#define A_BAT A2
 #define DIV_BAT 5.0
+#define A_BLOWER A0 ///< Use A0 as an analog output for blower speed control if using a blower for the air source.
 // read the venturi as below
 #define A_VENTURI A5
 #define QSCALE_VENTURI  11.28   ///< (l/min) / cmH2O^0.5 to get Q = QSCALE_VENTURI * pow(p,0.5)
@@ -205,6 +206,7 @@ bool p_trigEnabled = false;   ///< enable triggering on pressure limits
 bool p_closeCPAP = false;     ///< set true to close the CPAP valve, must be set false for normal running
 bool p_openAll = false;     ///< set true to open all the valves, must be set false for normal running
 bool p_stopped = false;     ///< set true to enable menu items that could interfere with normal running
+bool p_config = false;     ///< set true to prevent return to run mode during configuration processes
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
 bool p_plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
 bool p_printConsole = true;     ///< set false to turn off console data output, notmally true

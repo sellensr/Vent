@@ -49,7 +49,7 @@ void loop()
  
   uno.run();    // keep track of things
 
-  if(millis() - v_lastStop > STOP_MAX){
+  if(millis() - v_lastStop > STOP_MAX && !p_config){
     doConsoleCommand("R");  // re-enter run mode automatically
   }
 
