@@ -47,8 +47,8 @@ void listConsoleCommands() {
   P("  T - set breath Triggering, positive for triggering on, negative for triggering off, e.g. T1\n");
   P("  w - (w)rite out the calibration, servo angles, and other settings to the file, e.g. w\n");
   P("  W - (W)ipe out the calibration, servo angles, and other settings and return to defaults, e.g. W99\n");
-  P("  x - open all valves, e.g. x\n");
-  P("  X - close the CPAP valve, e.g. X\n");
+  P("  x - open all valves and enter config mode, will not auto-return to run mode, e.g. x\n");
+  P("  X - close the CPAP valve and enter stop mode, will auto return to run mode after reaching a time limit, e.g. X\n");
   P("  Z - do nothing, can be sent as a heartbeat, e.g. Z");
   P("\nNormal data lines start with a numeral. All command lines received will generate at least\n");
   P("one line of text in return. A line starting with ACK indicates a recognized command was received\n");
@@ -272,10 +272,10 @@ boolean doConsoleCommand(String cmd) {
     servoCPAP.write(aMaxCPAP);
     servoPEEP.write(aMaxPEEP);
     pDelta = 1;
-    P("ACK Install valve gates in open position and hit return....\n");
+    P("ACK Install valve gates in open position and hit return (enter)....\n");
     while(!Serial.available()); while(Serial.available()) Serial.read();
     while(pDelta != 0){
-      P("Enter change in CPAP valve angle, or just return to set as closed position.\n");
+      P("Enter change in CPAP valve angle, or just return (enter) to set as closed position.\n");
       while(!Serial.available());
       pDelta = Serial.parseInt();
       aMinCPAP += pDelta;
@@ -285,7 +285,7 @@ boolean doConsoleCommand(String cmd) {
     servoCPAP.write(aMaxCPAP);
     pDelta = 1;
     while(pDelta != 0){
-      P("Enter change in PEEP valve angle, or just return to set as closed position.\n");
+      P("Enter change in PEEP valve angle, or just return (enter) to set as closed position.\n");
       while(!Serial.available());
       pDelta = Serial.parseInt();
       aMinPEEP += pDelta;
@@ -295,7 +295,7 @@ boolean doConsoleCommand(String cmd) {
     servoPEEP.write(aMaxPEEP);
     pDelta = 1;
     while(pDelta != 0){
-      P("Enter change in Dual valve angle, or just return to set as CPAP closed position.\n");
+      P("Enter change in Dual valve angle, or just return (enter) to set as CPAP closed position.\n");
       while(!Serial.available());
       pDelta = Serial.parseInt();
       aCloseCPAP += pDelta;
@@ -305,7 +305,7 @@ boolean doConsoleCommand(String cmd) {
     servoDual.write(aMid);
     pDelta = 1;
     while(pDelta != 0){
-      P("Enter change in Dual valve angle, or just return to set as PEEP closed position.\n");
+      P("Enter change in Dual valve angle, or just return (enter) to set as PEEP closed position.\n");
       while(!Serial.available());
       pDelta = Serial.parseInt();
       aClosePEEP += pDelta;
@@ -373,6 +373,7 @@ boolean doConsoleCommand(String cmd) {
     p_stopped = true;
     p_config = true;
     PL("ACK All valves going to open position for configuration.");
+    P("Will not automatically return to (R)un mode. Use R to return.");
     ret = true;
     break;
   case 'X': // Close CPAP
@@ -381,6 +382,7 @@ boolean doConsoleCommand(String cmd) {
     p_openAll = false;
     p_stopped = true;
     PL("ACK CPAP valve going to closed position.");
+    P("Will return to (R)un mode after "); P(STOP_MAX / 1000); PL(" seconds.");
     ret = true;
     break;
   case 'Z': // Do nothing, heartbeat

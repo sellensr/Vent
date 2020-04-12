@@ -21,6 +21,8 @@
   This one you will need to download from github and copy into your libraries folder.
   #include "RWS_UNO.h"    // https://github.com/sellensr/RWS_UNO
 
+  BE SURE TO SET ALARM_LENGTH LONGER FOR PRODUCTION!!!!!
+
 
   @section author Author
 
@@ -49,8 +51,8 @@
 #define Q_CAP2          ///< use 2 Capillary sensors, one on CPAP side, one on PEEP, diff is flow
 
 // define only one hardware prototype -- config details to be resolved for production
-//#define YGK_MCL       ///< McLaughlin Hall Prototype
-//#define YGK_RWS       ///< Rick Sellens Prototype
+//#define YGK_MCL       ///< McLaughlin Hall Prototype -- Avoid using, may conflict with config file setup
+//#define YGK_RWS       ///< Rick Sellens Prototype    -- Avoid using, may conflict with config file setup
 #define YGK_GENERIC   ///< Generic Prototype needs settings and configuration
 /***************SET PINS HERE TO MATCH HARDWARE CONFIGURATION**************/
 // The calibration scale and offset values will be different for every combination of transducers.
@@ -77,7 +79,8 @@
 
 // other hardware and display settings below
 #define MINQ_VENTURI 1.0  ///< minimum litre/min to display as non-zero
-#define ALARM_PIN            5    // has 5 volt output for buzzer!
+#define ALARM_PIN            5    // Pin 5 has 5 volt higher current output for buzzer! 
+                                  // Although 3 volts is enough with sufficient current, could switch to 7 
 #define BLUE_BUTTON_PIN     12
 #define YELLOW_BUTTON_PIN    3
 #define RED_BUTTON_PIN       4
@@ -103,7 +106,7 @@ RWS_UNO uno = RWS_UNO();
 #define STOP_MAX 30000  ///< Max time in stop mode
 
 #define ALARM_DELAY         3000  ///< [ms] don't alarm until the condition has lasted this long
-#define ALARM_LENGTH          20  ///< [ms] don't make an alarm sound longer than this
+#define ALARM_LENGTH          20  ///< [ms] don't make an alarm sound longer than this, set short only during debugging
 #define ALARM_DELAY_DISPLAY 3000  /// [ms] don't set the alarm condition until the display has been silent this long
 #define ALARM_DELAY_LOOP     100  /// [ms] set the alarm condition if loop is taking longer than this
 
