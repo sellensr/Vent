@@ -86,7 +86,7 @@ void loop()
   if( endBreath - millis() > 60000      // if we are past the projected end of the scheduled breath
       || v_etr >= p_et                  // or we have been on expiration too long
           // or we have a pressure and are below inspiration trigger and it's enabled and we have been inspiring
-      || ((v_p > 1.0) && (v_p < p_epl + p_eplTol) && p_trigEnabled && startedInspiration)  
+      || ((v_p > 1.0) && (v_p < p_epl - p_eplTol) && p_trigEnabled && startedInspiration)  
       ) {
 
     // Record Pressures from last breath and reset accumulated min/max values for next breath    

@@ -111,6 +111,7 @@ RWS_UNO uno = RWS_UNO();
 #define EP_MAX 40       ///< Expiration pressure max
 #define IP_MIN 2        ///< Inspiration pressure min
 #define EP_MIN 1        ///< Expiration pressure min
+#define EPLTOL_MAX 10   ///< Max value for the tolerance
 
 #define STOP_MAX 30000  ///< Max time in stop mode
 
@@ -207,7 +208,7 @@ double p_ipl = 0.0;           ///< the inspiration pressure lower bound -- PEEP 
 double p_iphTol = 0.5;        ///< difference from p_eph required to trigger start of expiration if P > p_iph - p_iphTol or alarm if beyond
 double p_eph = EP_MAX;        ///< the expiration pressure upper bound, no action
 double p_epl = 0.0;           ///< the expiration pressure lower bound -- PEEP setting.
-double p_eplTol = 0.5;        ///< difference from p_epl required to trigger start of new breath if P < p_epl + p_eplTol or alarm if beyond
+double p_eplTol = 2.0;        ///< difference from p_epl required to trigger start of new breath if P < p_epl - p_eplTol or alarm if beyond
 int p_it = PB_DEF * INF_DEF;  ///< inspiration time setting, high/low limits
 int p_ith = IT_MAX;
 int p_itl = IT_MIN;

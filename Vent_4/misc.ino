@@ -184,7 +184,7 @@ boolean doConsoleCommand(String cmd) {
   case 'E': // Expiratory Pressures
     if (val[0] >= EP_MIN) p_eph = min(val[0], EP_MAX);
     if (val[1] >= EP_MIN) p_epl = min(val[1], EP_MAX);
-    if (val[2] >= 0) p_eplTol = min(val[2], 5);
+    if (abs(val[2]) >= 0) p_eplTol = min(abs(val[2]), EPLTOL_MAX);
     P("ACK Expiration Pressures set to: ");
     P(p_eph); P(" / "); P(p_epl);  P(" / "); P(p_eplTol); P(" cm H2O\n");
     ret = true;
