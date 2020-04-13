@@ -50,7 +50,11 @@ void loop()
   uno.run();    // keep track of things
 
   if(millis() - v_lastStop > STOP_MAX && !p_config){
-    doConsoleCommand("R");  // re-enter run mode automatically
+    // doConsoleCommand("R");  // re-enter run mode automatically
+    p_closeCPAP = false;
+    p_openAll = false;
+    p_stopped = false;
+    p_config = false;
   }
 
   if (millis() - v_lastStop > STOP_MAX - 2 * ALARM_DELAY_DISPLAY
@@ -250,9 +254,12 @@ void loop()
       v_alarmOnTime = 0;
     }
   }
+  // start the timing for the noises again if the alarm hasn't reset
+  if (v_alarm && v_alarmOnTime < millis() - ALARM_AUTO_REPEAT) v_alarmOnTime = millis();
   if (v_alarm & VENT_BUZ_ERROR  // there's an alarm on condition code that requires buzzer sounding 
       && millis() > v_alarmOnTime + ALARM_DELAY   // that has lasted longer than the delay
       && millis() < v_alarmOnTime + ALARM_LENGTH + ALARM_DELAY // and hasn't run out of time
+      && millis() > ALARM_HOLIDAY       // the display has had time to wake up
     ) digitalWrite(ALARM_PIN,HIGH);
   else{
     digitalWrite(ALARM_PIN,LOW);

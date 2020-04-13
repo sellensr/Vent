@@ -252,8 +252,9 @@ boolean doConsoleCommand(String cmd) {
     readCalFlash();
     ret = true;
     break;
-  case 'R': // Run Mode
-    if(p_stopped || p_closeCPAP || p_openAll) PL("ACK Taking all valves and operations to run mode.");
+  case 'R': // Run Mode -- also need to do these things at the top of the loop
+//    if(p_stopped || p_closeCPAP || p_openAll) PL("ACK Taking all valves and operations to run mode.");
+    PL("ACK Taking all valves and operations to run mode.");
     p_closeCPAP = false;
     p_openAll = false;
     p_stopped = false;

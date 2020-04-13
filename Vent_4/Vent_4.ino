@@ -117,8 +117,10 @@ RWS_UNO uno = RWS_UNO();
 
 #define ALARM_DELAY         3000  ///< [ms] don't alarm until the condition has lasted this long
 #define ALARM_LENGTH       10000  ///< [ms] don't make an alarm sound longer than this, set short only during debugging
-#define ALARM_DELAY_DISPLAY 3000  /// [ms] don't set the alarm condition until the display has been silent this long
-#define ALARM_DELAY_LOOP     100  /// [ms] set the alarm condition if loop is taking longer than this
+#define ALARM_DELAY_DISPLAY 3000  ///< [ms] don't set the alarm condition until the display has been silent this long
+#define ALARM_DELAY_LOOP     100  ///< [ms] set the alarm condition if loop is taking longer than this
+#define ALARM_AUTO_REPEAT  30000  ///< [ms] reset the alarm so it sounds again after about this long 
+#define ALARM_HOLIDAY      40000  ///< [ms] don't alarm if millis() is less than this, since display has not woken up
 
 // Servo geometry will depend on the physical assembly of each unit and variability between servos.
 // These values will have to be set for each individual machine after final assembly.
