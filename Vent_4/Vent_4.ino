@@ -66,14 +66,14 @@
 #define PSCALE_VENTURI  23.53   ///< cmH20 / volt for venturi pressure sensor
 #define OFFSET_VENTURI   1.3209 ///< volts at zero differential pressure on venturi
 // read the PX137 for patient pressure as below
-#define A_PX137 A4
+#define A_PX137 A5
 #define PSCALE_PX137    53.60   ///< cmH20 / volt for PX137 patient pressure sensor
 #define OFFSET_PX137     1.2945 ///< volts at zero patient pressure
 // read the Capillary sensors as below
-#define A_CAP_CPAP A5           ///< replaces venturi
+#define A_CAP_CPAP A3           ///< replaces venturi
 #define SCALE_CAP_CPAP 130.00   ///< (l/min) / volt for capillary input from CPAP side
 #define OFFSET_CAP_CPAP  1.3192 ///< volts at zero differential pressure on CPAP side
-#define A_CAP_PEEP A3           ///< new in Vent_4
+#define A_CAP_PEEP A4           ///< new in Vent_4
 #define SCALE_CAP_PEEP  80.00   ///< (l/min) / volt for capillary input from PEEP side
 #define OFFSET_CAP_PEEP  1.2750 ///< volts at zero differential pressure on PEEP side
 
