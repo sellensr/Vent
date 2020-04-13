@@ -61,21 +61,30 @@
 #define DIV_BAT 5.0
 #define A_BLOWER A0 ///< Use A0 as an analog output for blower speed control if using a blower for the air source.
 // read the venturi as below
-#define A_VENTURI A5
+#define A_VENTURI A5            ///< Venturi not used after obsolete Model 2
 #define QSCALE_VENTURI  11.28   ///< (l/min) / cmH2O^0.5 to get Q = QSCALE_VENTURI * pow(p,0.5)
 #define PSCALE_VENTURI  23.53   ///< cmH20 / volt for venturi pressure sensor
 #define OFFSET_VENTURI   1.3209 ///< volts at zero differential pressure on venturi
+
+// Analog scales and offsets might be numbers like these used for testing on the RWS prototype:
+// ACK Offsets and Scales set to
+//     Pressure: 1.3132V / 54.20 cmH2O / V
+//    CPAP Flow: 1.2642V / 520.00 lpm / V
+//    PEEP Flow: 1.2863V / 344.00 lpm / V
+// They need to be determined by following the Config Instructions PDF file and saved in 
+// the ventilator's config file with a console w command to be read on restart.
+
 // read the PX137 for patient pressure as below
 #define A_PX137 A5
-#define PSCALE_PX137    53.60   ///< cmH20 / volt for PX137 patient pressure sensor
-#define OFFSET_PX137     1.2945 ///< volts at zero patient pressure
+#define PSCALE_PX137     1.0    ///< cmH20 / volt for PX137 patient pressure sensor
+#define OFFSET_PX137     0.0    ///< volts at zero patient pressure
 // read the Capillary sensors as below
-#define A_CAP_CPAP A3           ///< replaces venturi
-#define SCALE_CAP_CPAP 130.00   ///< (l/min) / volt for capillary input from CPAP side
-#define OFFSET_CAP_CPAP  1.3192 ///< volts at zero differential pressure on CPAP side
-#define A_CAP_PEEP A4           ///< new in Vent_4
-#define SCALE_CAP_PEEP  80.00   ///< (l/min) / volt for capillary input from PEEP side
-#define OFFSET_CAP_PEEP  1.2750 ///< volts at zero differential pressure on PEEP side
+#define A_CAP_CPAP A3           ///< replaces venturi on Model 3
+#define SCALE_CAP_CPAP   1.0    ///< (l/min) / volt for capillary input from CPAP side
+#define OFFSET_CAP_CPAP  0.0    ///< volts at zero differential pressure on CPAP side
+#define A_CAP_PEEP A4           ///< new in Vent_4 to run on Model 3
+#define SCALE_CAP_PEEP   1.0    ///< (l/min) / volt for capillary input from PEEP side
+#define OFFSET_CAP_PEEP  0.0    ///< volts at zero differential pressure on PEEP side
 
 // other hardware and display settings below
 #define MINQ_VENTURI 1.0  ///< minimum litre/min to display as non-zero
