@@ -250,7 +250,7 @@ void loop()
       v_alarmOnTime = 0;
     }
   }
-  if (v_alarm   // there's an alarm on condition code 
+  if (v_alarm & VENT_BUZ_ERROR  // there's an alarm on condition code that requires buzzer sounding 
       && millis() > v_alarmOnTime + ALARM_DELAY   // that has lasted longer than the delay
       && millis() < v_alarmOnTime + ALARM_LENGTH + ALARM_DELAY // and hasn't run out of time
     ) digitalWrite(ALARM_PIN,HIGH);

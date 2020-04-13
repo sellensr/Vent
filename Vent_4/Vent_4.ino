@@ -115,7 +115,7 @@ RWS_UNO uno = RWS_UNO();
 #define STOP_MAX 30000  ///< Max time in stop mode
 
 #define ALARM_DELAY         3000  ///< [ms] don't alarm until the condition has lasted this long
-#define ALARM_LENGTH          20  ///< [ms] don't make an alarm sound longer than this, set short only during debugging
+#define ALARM_LENGTH       10000  ///< [ms] don't make an alarm sound longer than this, set short only during debugging
 #define ALARM_DELAY_DISPLAY 3000  /// [ms] don't set the alarm condition until the display has been silent this long
 #define ALARM_DELAY_LOOP     100  /// [ms] set the alarm condition if loop is taking longer than this
 
@@ -251,6 +251,7 @@ int p_serialNumber = 30000001;  ///< Hardware serial number is model number * 10
 #define VENT_SLOW_ERROR 0b0010000000000000  ///<  8192 Loop is not executing in under ALARM_DELAY_LOOP
 #define VENT_DISP_ERROR 0b0100000000000000  ///< 16384 Display/Console Incognito longer than ALARM_DELAY_DISPLAY
 #define VENT_EXT_ERROR  0b1000000000000000  ///< 32768 External Error
+#define VENT_BUZ_ERROR  0b1111000000000000  ///< Only make a local buzzer noise for these error states
 
 /**************************************************************************/
 /*!
@@ -283,7 +284,7 @@ void setup()
   pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
   pinMode(ALARM_PIN, OUTPUT);
   digitalWrite(ALARM_PIN, HIGH);
-  delay(5); ///< just long enough to make a little squeak
+  delay(5); ///< just long enough to make a little squeak so you know it is waking up
   digitalWrite(ALARM_PIN, LOW);
   delay(100); 
   if(!p_plotterMode){
