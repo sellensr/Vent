@@ -13,6 +13,14 @@
 
   Vent_3 FROZEN @ 12:11 2020-04-03 as submitted for challenge. Moving on to Vent_4
 
+  Vent_4 to be FROZEN @ ??:?? 2020-04-14 as shipped with prototype. Moving on to Vent_5
+
+  Future Features and Mods:
+    enable shorter values for STOP_MAX in cooperation with display unit
+    save and recover settings to resume as was after power cycle, independent of display unit
+    add plateau phase to allow 0 to 1 second delay between inspiration phase and expiration phase, probably as a fraction of inspiration time.
+    report pause time remaing before auto restart
+
   Vent requires some libraries you may not have installed. These two can be installed
   via Tools/Manage Libraries... inside the IDE. Search for sdFat and be sure to install
   the Adafruit fork of the original. 
@@ -113,7 +121,7 @@ RWS_UNO uno = RWS_UNO();
 #define EP_MIN 1        ///< Expiration pressure min
 #define EPLTOL_MAX 10   ///< Max value for the tolerance
 
-#define STOP_MAX 30000  ///< Max time in stop mode
+#define STOP_MAX 600000000L  ///< Max time in stop mode, set really long to limit auto restart capability, 600000000L is about a week
 
 #define ALARM_DELAY         3000  ///< [ms] don't alarm until the condition has lasted this long
 #define ALARM_LENGTH       10000  ///< [ms] don't make an alarm sound longer than this, set short only during debugging
@@ -121,6 +129,7 @@ RWS_UNO uno = RWS_UNO();
 #define ALARM_DELAY_LOOP     100  ///< [ms] set the alarm condition if loop is taking longer than this
 #define ALARM_AUTO_REPEAT  30000  ///< [ms] reset the alarm so it sounds again after about this long 
 #define ALARM_HOLIDAY      40000  ///< [ms] don't alarm if millis() is less than this, since display has not woken up
+#define ALARM_STOP         30000  ///< [ms] alarm if stopped for longer than this
 
 // Servo geometry will depend on the physical assembly of each unit and variability between servos.
 // These values will have to be set for each individual machine after final assembly.
@@ -218,9 +227,9 @@ int p_et = PB_DEF - p_it;     ///< expiration time setting, high/low limits
 int p_eth = ET_MAX;
 int p_etl = ET_MIN;
 bool p_trigEnabled = false;   ///< enable triggering on pressure limits
-bool p_closeCPAP = false;     ///< set true to close the CPAP valve, must be set false for normal running
+bool p_closeCPAP = true;     ///< set true to close the CPAP valve, must be set false for normal running
 bool p_openAll = false;     ///< set true to open all the valves, must be set false for normal running
-bool p_stopped = false;     ///< set true to enable menu items that could interfere with normal running
+bool p_stopped = true;     ///< set true to enable menu items that could interfere with normal running
 bool p_config = false;     ///< set true to prevent return to run mode during configuration processes
 bool p_alarm = false;         ///< set true for an alarm condition imposed externally
 bool p_plotterMode = false;     ///< set true for output visualization using arduino ide plotter mode
@@ -250,11 +259,12 @@ int p_serialNumber = 30000001;  ///< Hardware serial number is model number * 10
 #define VENT_EPH_ERROR  0b0000000000100000  ///<    32 Expiration Pressure High > p_eph
 #define VENT_ETS_ERROR  0b0000000001000000  ///<    64 Expiration Time Short < p_etl
 #define VENT_ETL_ERROR  0b0000000010000000  ///<   128 Expiration Time Long > p_eth
+#define VENT_STOP_ERROR 0b0000100000000000  ///<  2048 We have been in stop mode longer than ALARM_STOP
 #define VENT_STOP_WARN  0b0001000000000000  ///<  4096 Going back to run mode soon
 #define VENT_SLOW_ERROR 0b0010000000000000  ///<  8192 Loop is not executing in under ALARM_DELAY_LOOP
 #define VENT_DISP_ERROR 0b0100000000000000  ///< 16384 Display/Console Incognito longer than ALARM_DELAY_DISPLAY
 #define VENT_EXT_ERROR  0b1000000000000000  ///< 32768 External Error
-#define VENT_BUZ_ERROR  0b1111000000000000  ///< Only make a local buzzer noise for these error states
+#define VENT_BUZ_ERROR  0b1111100000000000  ///< Only make a local buzzer noise for these error states
 
 /**************************************************************************/
 /*!

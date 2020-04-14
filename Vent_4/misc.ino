@@ -105,6 +105,24 @@ bool loopConsole(){
   return ret;
 }
 
+/**************************************************************************/
+/*!
+    @brief Go to Run mode.
+    @param none
+    @return none
+*/
+/**************************************************************************/
+void setRun(){
+    p_closeCPAP = false;
+    p_openAll = false;
+    p_stopped = false;
+    p_config = false;
+}
+
+
+
+
+
 void showVoltages(int n, bool setOffsets = false);
 /**************************************************************************/
 /*!
@@ -130,6 +148,7 @@ boolean doConsoleCommand(String cmd) {
       ret = true;
       break;
     }
+    P("ACK Calling showVoltages().\n");
     if(val[0] < 1) n = 10000;
     n = min(n,10000);
     if(val[0] < 0) showVoltages(n, true);
@@ -255,10 +274,11 @@ boolean doConsoleCommand(String cmd) {
   case 'R': // Run Mode -- also need to do these things at the top of the loop
 //    if(p_stopped || p_closeCPAP || p_openAll) PL("ACK Taking all valves and operations to run mode.");
     PL("ACK Taking all valves and operations to run mode.");
-    p_closeCPAP = false;
-    p_openAll = false;
-    p_stopped = false;
-    p_config = false;
+    setRun();
+//    p_closeCPAP = false;
+//    p_openAll = false;
+//    p_stopped = false;
+//    p_config = false;
     ret = true;
     break;
   case 's': // Interactive Servo Angle Values
@@ -358,7 +378,7 @@ boolean doConsoleCommand(String cmd) {
     break;
   case 'W': // wipe calibrations and return to defaults
     if (val[0] != 99){ 
-      P("The argument must be 99 to wipe the calibration settings!!!\n");
+      P("ACK The argument must be 99 to wipe the calibration settings!!!\n");
       ret = false;
     }
     else {
@@ -391,6 +411,7 @@ boolean doConsoleCommand(String cmd) {
     ret = true;
     break;
   default:
+    PL("NOACK line not recognized as a command.");
     ret = false; // didn't recognize command
     break;
   }

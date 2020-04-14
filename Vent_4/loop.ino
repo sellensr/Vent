@@ -51,11 +51,17 @@ void loop()
 
   if(millis() - v_lastStop > STOP_MAX && !p_config){
     // doConsoleCommand("R");  // re-enter run mode automatically
-    p_closeCPAP = false;
-    p_openAll = false;
-    p_stopped = false;
-    p_config = false;
+//    p_closeCPAP = false;
+//    p_openAll = false;
+//    p_stopped = false;
+//    p_config = false;
+    setRun();
   }
+
+  if (millis() - v_lastStop > ALARM_STOP && p_stopped){
+      if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already
+      v_alarm = v_alarm | VENT_STOP_ERROR;            // set the appropriate alarm bit
+  } else v_alarm = v_alarm & ~VENT_STOP_ERROR;        // reset the alarm bit
 
   if (millis() - v_lastStop > STOP_MAX - 2 * ALARM_DELAY_DISPLAY
       && p_stopped){  // back to run mode soon

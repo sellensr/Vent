@@ -9,6 +9,7 @@ void loopButtons(){
   static unsigned long lastButton = 0;    // set to millis() at the end of the last button press
   static double pDelta = 1;
   static double epDelta = 1;
+  if(digitalRead(BUTTON_PIN) == LOW) setRun();
   
   if (millis()-lastButton > 500){
     lastButton = millis();
@@ -22,9 +23,9 @@ void loopButtons(){
 //      if(p_iph < 10) pDelta = abs(pDelta);
 //      p_iph += pDelta;
       /************** Increase the min pressure **********************/
-      if(p_epl > 12) epDelta = -abs(epDelta);
-      if(p_epl < 4) epDelta = abs(epDelta);
-      p_epl += epDelta;
+//      if(p_epl > 12) epDelta = -abs(epDelta);
+//      if(p_epl < 4) epDelta = abs(epDelta);
+//      p_epl += epDelta;
       
       /******************* toggle enable / disable triggering ****************/
       if (p_trigEnabled) p_trigEnabled = false; // toggle trigger mode
