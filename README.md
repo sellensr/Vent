@@ -1,4 +1,4 @@
-Vent_4 to be FROZEN 2020-04-14 as shipped with prototype. Moving on to Vent_5
+Vent_4 FROZEN 2020-04-14 as shipped with prototype. Moving on to Vent_5
 
   Future Features and Mods:
     enable shorter values for STOP_MAX in cooperation with display unit
