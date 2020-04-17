@@ -267,6 +267,7 @@ int YGKMV::readPatFlash(){
     doConsoleCommand(line);
     line = readFile.readStringUntil('\n');
   }
+  v_lastPatChange = 0;  // don't need to update values just read from flash
   return 0;
 }
 
