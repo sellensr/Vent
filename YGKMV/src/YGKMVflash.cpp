@@ -99,7 +99,7 @@ int YGKMV::setupFlash(){
       int rp = readPatFlash();
       if(rp) return rp;
       else ret += 1;
-    }    
+    } else Serial.println("Patient file not found...");  
   }
   return ret;  
 }

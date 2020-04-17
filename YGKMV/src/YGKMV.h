@@ -198,6 +198,8 @@ class YGKMV{
     int p_eth = ET_MAX;
     int p_etl = ET_MIN;
     bool p_trigEnabled = false;   ///< enable triggering on pressure limits
+    bool p_patFlashEnabled = false; ///< set true to enable saving patient settings to flash
+    bool p_patFlashWritten = false; ///< patient flash has been written at least once this cycle
     bool p_closeCPAP = true;      ///< set true to close the CPAP valve, must be set false for normal running
     bool p_openAll = false;       ///< set true to open all the valves, must be set false for normal running
     bool p_stopped = true;        ///< set true to enable menu items that could interfere with normal running

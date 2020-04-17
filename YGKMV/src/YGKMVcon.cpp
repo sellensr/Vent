@@ -117,6 +117,7 @@ boolean YGKMV::doConsoleCommand(String cmd) {
   int ival = val[0];           // an integer version of the first float arg
   unsigned long logPeriod;
   int n = 1, pDelta = 1;
+  int wr = 0;
   switch (c) {
   case 'a': // show analog voltages
     if(!p_stopped){ 
@@ -174,6 +175,7 @@ boolean YGKMV::doConsoleCommand(String cmd) {
     if (val[2] >= ET_MIN) p_etl = min(val[2], ET_MAX);
     P("ACK Expiration Times set to: ");
     P(p_et); P(" target "); P(p_eth);  P(" / "); P(p_etl); P(" high/low ms\n");
+    if(p_patFlashEnabled) writePatFlash();
     ret = true;
     break;
   case 'E': // Expiratory Pressures
@@ -182,6 +184,7 @@ boolean YGKMV::doConsoleCommand(String cmd) {
     if (abs(val[2]) >= 0) p_eplTol = min(abs(val[2]), EPLTOL_MAX);
     P("ACK Expiration Pressures set to: ");
     P(p_eph); P(" / "); P(p_epl);  P(" / "); P(p_eplTol); P(" cm H2O\n");
+    if(p_patFlashEnabled) writePatFlash();
     ret = true;
     break;
   case 'f': // show flow values
@@ -201,6 +204,7 @@ boolean YGKMV::doConsoleCommand(String cmd) {
     if (val[2] >= IT_MIN) p_itl = min(val[2], IT_MAX);
     P("ACK Inspiration Times set to: ");
     P(p_it); P(" target "); P(p_ith);  P(" / "); P(p_itl); P(" high/low ms\n");
+    if(p_patFlashEnabled) writePatFlash();
     ret = true;
     break;
   case 'I': // Inspiratory Pressures
@@ -209,6 +213,7 @@ boolean YGKMV::doConsoleCommand(String cmd) {
     if (val[2] >= 0) p_iphTol = min(val[2], 5);
     P("ACK Inspiration Pressures set to: ");
     P(p_iph); P(" / "); P(p_ipl);  P(" / "); P(p_iphTol); P(" cm H2O\n");
+    if(p_patFlashEnabled) writePatFlash();
     ret = true;
     break;
   case 'M': // Model / Serial numbers
@@ -345,6 +350,7 @@ boolean YGKMV::doConsoleCommand(String cmd) {
     P("ACK Pressure Triggering set to: ");
     if(p_trigEnabled) P("True\n");
     else P("False\n");
+    if(p_patFlashEnabled) writePatFlash();
     ret = true;
     break;
   case 'w': // write current calibrations
