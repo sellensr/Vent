@@ -44,13 +44,21 @@ int YGKMV::run(bool reset){
  
   uno.run();    // keep track of things
 
-  if(millis() - v_lastStop > STOP_MAX && !p_config){  // too long a stop
-    setRun();
-  }
+  // If things are running well after startup and there has been a patient change, 
+  // then write the patient file, but not too often as flash has limited cycles.
+  // Setting up patient parameters at power on means it will write a patient file
+  // every time the power comes up and stays up for a while.
+  if(!v_justStarted            // we are well started
+    && !p_stopped              // we are running
+    && v_lastPatChange != 0    // there is an unrecorded patient change
+    && millis() - v_lastPatChange > YGKMV_STARTUP * 10  // but not recently
+    ) writePatFlash();
 
-  if(millis() > ALARM_HOLIDAY && v_patientSet){       // there's a patient to get back to and display is sleeping
-    setRun();
-  }  
+  if(millis() > YGKMV_STARTUP && !p_stopped) v_justStarted = false; // out of startup phase
+
+  if(millis() - v_lastStop > STOP_MAX && !p_config) setRun(); // too long a stop
+
+  if(millis() > ALARM_HOLIDAY && v_patientSet) setRun(); // there's a patient to get back to and display is sleeping
 
   if (millis() - v_lastStop > ALARM_STOP && p_stopped){
       if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already

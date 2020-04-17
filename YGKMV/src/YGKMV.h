@@ -69,6 +69,8 @@
 #define ALARM_HOLIDAY      40000  ///< [ms] don't alarm if millis() is less than this, since display has not woken up
 #define ALARM_STOP         30000  ///< [ms] alarm if stopped for longer than this
 
+#define YGKMV_STARTUP      60000  ///< [ms] before we consider ourselves in normal operation
+
 /**************************************************************************/
 /*!
     @brief  The YGKMV class
@@ -181,8 +183,12 @@ class YGKMV{
     unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
     unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
     unsigned long v_lastStop = 0; ///< set to millis() when the last Stop Command input was received
+    unsigned long v_firstRun = 0; ///< set to millis() when the first setRun() call takes place
+    unsigned long v_lastPatChange = 0; ///< set to millis() when the patient data changes, then set to zero when patient file written
     double v_tauW = 0.001;        ///< the smoothing weight factor to use this cycle for time constant p_tau
     bool v_patientSet = false;    ///< set true if a patient data file is found, or if patient parameters have been set
+    bool v_justStarted = true;    ///< set true to start, then set false until power down
+    bool v_calFile = false;       ///< set true if a calibration and configuration file exists
     
     // p_ for all elements that are set parameters for desired performance
     double p_iph = IP_MAX;        ///< the inspiration pressure upper bound.

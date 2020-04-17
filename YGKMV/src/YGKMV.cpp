@@ -58,6 +58,9 @@ int YGKMV::begin(){
   PR("\n\nYGK Modular Ventilator\n\nFirmware Library Version: "); PL(YGKMV_VERSION); 
   int fl = setupFlash();   // reads all the calibration data, hardware model and serial numbers
   if(fl > 0) v_patientSet = true;  ///< a patient data file was found
+  if(fl < 0){ ///< no calibration file was found
+    v_calFile = false;  
+  } else v_calFile = true;
   PR("Hardware Model: "); PR(p_modelNumber); PR("    Serial Number: "); PR(p_serialNumber);
   PR("\n\n");
   setupP();
@@ -108,6 +111,7 @@ void YGKMV::setRun(){
     p_openAll = false;
     p_stopped = false;
     p_config = false;
+    if(v_firstRun == 0) v_firstRun = millis();
 }
 
 

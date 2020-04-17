@@ -83,12 +83,13 @@ int YGKMV::setupFlash(){
   }
   
   if (!fatfs.exists("/vent/cal.txt")) {
-    Serial.println("Calibration file not found, creating one using default values...");
-    String cmd = "C";
-    doConsoleCommand(cmd);
-    cmd = "S";
-    doConsoleCommand(cmd);
-    ret += writeCalFlash();
+    return -4;  // ventilator is not calibrated --  don't write a cal file
+//    Serial.println("Calibration file not found, creating one using default values...");
+//    String cmd = "C";
+//    doConsoleCommand(cmd);
+//    cmd = "S";
+//    doConsoleCommand(cmd);
+//    ret += writeCalFlash();
   } else {
     Serial.println("Calibration file found, reading in the saved values...");
     ret += readCalFlash();
@@ -117,7 +118,7 @@ int YGKMV::writeCalFlash(){
   File writeFile = fatfs.open("/vent/cal.txt", FILE_WRITE);
   if (!writeFile) {
     Serial.println("Error, failed to open cal.txt for writing!");
-    return -4;
+    return -8;
   }
   Serial.println("Opened file /vent/cal.txt for writing/appending...");
   char sc[MAX_COMMAND_LENGTH] = {0};
@@ -137,6 +138,7 @@ int YGKMV::writeCalFlash(){
   PR(sc);
   // Close the file when finished writing.
   writeFile.close();
+  v_calFile = true;
   Serial.println("Wrote to file /vent/cal.txt!");
   return 0;
 }
@@ -153,9 +155,9 @@ int YGKMV::readCalFlash(){
   File readFile = fatfs.open("/vent/cal.txt", FILE_READ);
   if (!readFile){
     P("Could not open /vent/cal.txt for reading.\n"); 
-    return -8;
+    return -16;
   }
-  P("Reading lines from calibration file.\n");
+  P("Reading and executing lines from calibration file.\n");
   String line = "";
   line = readFile.readStringUntil('\n');
   while(line != ""){
@@ -211,7 +213,7 @@ int YGKMV::writePatFlash(){
   File writeFile = fatfs.open("/vent/patient.txt", FILE_WRITE);
   if (!writeFile) {
     Serial.println("Error, failed to open patient.txt for writing!");
-    return -4;
+    return -8;
   }
   Serial.println("Opened file /vent/patient.txt for writing/appending...");
   char sc[MAX_COMMAND_LENGTH] = {0};
@@ -237,6 +239,7 @@ int YGKMV::writePatFlash(){
   sprintf(sc,"T%d\n", i);
   writeFile.print(sc);
   PR(sc);
+  v_lastPatChange = 0;
   // Close the file when finished writing.
   writeFile.close();
   Serial.println("Wrote to file /vent/patient.txt!");
@@ -254,9 +257,9 @@ int YGKMV::readPatFlash(){
   File readFile = fatfs.open("/vent/patient.txt", FILE_READ);
   if (!readFile){
     P("Could not open /vent/patient.txt for reading.\n"); 
-    return -8;
+    return -16;
   }
-  P("Reading lines from patient file.\n");
+  P("Reading and executing lines from patient file.\n");
   String line = "";
   line = readFile.readStringUntil('\n');
   while(line != ""){
