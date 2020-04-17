@@ -293,11 +293,17 @@ void YGKMV::delPatFlash(){
 void YGKMV::wipePatFlash(){
   fatfs.remove("/vent/patient.txt");
   // Restore the starting values
-//  scale[PATIENT] = 1.0;
-//  offset[PATIENT] = 0.0;
-//  scale[CPAP] = 1.0;
-//  offset[CPAP] = 0.0;
-//  scale[PEEP] = 1.0;
-//  offset[PEEP] = 0.0;
-  
+  p_iph = IP_MAX;        ///< the inspiration pressure upper bound.
+  p_ipl = 0.0;           ///< the inspiration pressure lower bound -- PEEP setting, no action
+  p_iphTol = 0.5;        ///< difference from p_eph required to trigger start of expiration if P > p_iph - p_iphTol or alarm if beyond
+  p_eph = EP_MAX;        ///< the expiration pressure upper bound, no action
+  p_epl = 0.0;           ///< the expiration pressure lower bound -- PEEP setting.
+  p_eplTol = 2.0;        ///< difference from p_epl required to trigger start of new breath if P < p_epl - p_eplTol or alarm if beyond
+  p_it = PB_DEF * INF_DEF;  ///< inspiration time setting, high/low limits
+  p_ith = IT_MAX;
+  p_itl = IT_MIN;
+  p_et = PB_DEF - p_it;     ///< expiration time setting, high/low limits
+  p_eth = ET_MAX;
+  p_etl = ET_MIN;
+  p_trigEnabled = false;   ///< enable triggering on pressure limits
 }
