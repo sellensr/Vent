@@ -42,7 +42,8 @@
             Creates the calibration file cal.txt from current values if one
             doesn't already exist. Does not create a patient file automatically
     @param none
-    @return none
+    @return negative error code, 0 for nothing interesting, or a positive
+            value indicating what files were found besides the calibration file. 
 */
 /**************************************************************************/
 int YGKMV::setupFlash(){
@@ -92,9 +93,24 @@ int YGKMV::setupFlash(){
     Serial.println("Calibration file found, reading in the saved values...");
     ret += readCalFlash();
   }
+  if(!ret){ // still OK, so check the patient file
+    if (fatfs.exists("/vent/patient.txt")) {
+      Serial.println("Patient file found, reading in the saved values...");
+      int rp = readPatFlash();
+      if(rp) return rp;
+      else ret += 1;
+    }    
+  }
   return ret;  
 }
 
+/**************************************************************************/
+/*!
+    @brief Write the calibration file cal.txt from current values.
+    @param none
+    @return negative error code, 0 for success. 
+*/
+/**************************************************************************/
 int YGKMV::writeCalFlash(){
   delCalFlash();   // delete the old file
   // Create a calibration file in the vent directory and write data to it.
@@ -125,6 +141,13 @@ int YGKMV::writeCalFlash(){
   return 0;
 }
 
+/**************************************************************************/
+/*!
+    @brief Read the calibration file cal.txt and overwrite current values.
+    @param none
+    @return negative error code, 0 for success. 
+*/
+/**************************************************************************/
 int YGKMV::readCalFlash(){
   // Read in values from the calibration file if it exists
   File readFile = fatfs.open("/vent/cal.txt", FILE_READ);
@@ -143,11 +166,26 @@ int YGKMV::readCalFlash(){
   return 0;
 }
 
+/**************************************************************************/
+/*!
+    @brief Delete the calibration file cal.txt from flash.
+    @param none
+    @return none 
+*/
+/**************************************************************************/
 void YGKMV::delCalFlash(){
   // Delete the calibration file
   fatfs.remove("/vent/cal.txt");
 }
 
+/**************************************************************************/
+/*!
+    @brief Delete the calibration file cal.txt from flash and overwrite
+    existing calibration values.
+    @param none
+    @return none 
+*/
+/**************************************************************************/
 void YGKMV::wipeCalFlash(){
   // Delete the calibration file
   fatfs.remove("/vent/cal.txt");
@@ -158,5 +196,104 @@ void YGKMV::wipeCalFlash(){
   offset[CPAP] = 0.0;
   scale[PEEP] = 1.0;
   offset[PEEP] = 0.0;
+  
+}
+
+/**************************************************************************/
+/*!
+    @brief Write the patient file patient.txt from current values.
+    @param none
+    @return negative error code, 0 for success. 
+*/
+/**************************************************************************/
+int YGKMV::writePatFlash(){
+  delPatFlash();   // delete the old file
+  File writeFile = fatfs.open("/vent/patient.txt", FILE_WRITE);
+  if (!writeFile) {
+    Serial.println("Error, failed to open patient.txt for writing!");
+    return -4;
+  }
+  Serial.println("Opened file /vent/patient.txt for writing/appending...");
+  char sc[MAX_COMMAND_LENGTH] = {0};
+  // write an inspiration pressure line
+  sprintf(sc,"I%7.2f,%7.2f,%7.2f\n", p_iph, p_ipl, p_iphTol);
+  writeFile.print(sc);
+  PR(sc);
+  // write an expiration pressure line
+  sprintf(sc,"E%7.2f,%7.2f,%7.2f\n", p_eph, p_epl, p_eplTol);
+  writeFile.print(sc);
+  PR(sc);
+  // write an inspiration time line
+  sprintf(sc,"i%d,%d,%d\n", p_it, p_ith, p_itl);
+  writeFile.print(sc);
+  PR(sc);
+  // write an expiration time line
+  sprintf(sc,"e%d,%d,%d\n", p_et, p_eth, p_etl);
+  writeFile.print(sc);
+  PR(sc);
+  // write a Triggering setting line
+  int i = -1;
+  if(p_trigEnabled) i = 1; 
+  sprintf(sc,"T%d\n", i);
+  writeFile.print(sc);
+  PR(sc);
+  // Close the file when finished writing.
+  writeFile.close();
+  Serial.println("Wrote to file /vent/patient.txt!");
+  return 0;
+}
+
+/**************************************************************************/
+/*!
+    @brief Read the calibration file cal.txt and overwrite current values.
+    @param none
+    @return negative error code, 0 for success. 
+*/
+/**************************************************************************/
+int YGKMV::readPatFlash(){
+  File readFile = fatfs.open("/vent/patient.txt", FILE_READ);
+  if (!readFile){
+    P("Could not open /vent/patient.txt for reading.\n"); 
+    return -8;
+  }
+  P("Reading lines from patient file.\n");
+  String line = "";
+  line = readFile.readStringUntil('\n');
+  while(line != ""){
+    P("From File: "); PL(line);
+    doConsoleCommand(line);
+    line = readFile.readStringUntil('\n');
+  }
+  return 0;
+}
+
+/**************************************************************************/
+/*!
+    @brief Delete the calibration file cal.txt from flash.
+    @param none
+    @return none 
+*/
+/**************************************************************************/
+void YGKMV::delPatFlash(){
+  fatfs.remove("/vent/patient.txt");
+}
+
+/**************************************************************************/
+/*!
+    @brief Delete the patient file patient.txt from flash and overwrite
+    existing calibration values.
+    @param none
+    @return none 
+*/
+/**************************************************************************/
+void YGKMV::wipePatFlash(){
+  fatfs.remove("/vent/patient.txt");
+  // Restore the starting values
+//  scale[PATIENT] = 1.0;
+//  offset[PATIENT] = 0.0;
+//  scale[CPAP] = 1.0;
+//  offset[CPAP] = 0.0;
+//  scale[PEEP] = 1.0;
+//  offset[PEEP] = 0.0;
   
 }

@@ -56,14 +56,12 @@ int YGKMV::begin(){
   servoPEEP.attach(dPins[PEEP]);   ///< actuates PEEP valve only 10
   servoDual.attach(dPins[DUAL]);   ///< actuates both valve bodies alternately 9
   PR("\n\nYGK Modular Ventilator\n\nFirmware Library Version: "); PL(YGKMV_VERSION); 
-  setupFlash();   // reads all the calibration data, hardware model and serial numbers
-  PR("   Model: "); PR(p_modelNumber); PR("    Serial Number: "); PR(p_serialNumber);
+  int fl = setupFlash();   // reads all the calibration data, hardware model and serial numbers
+  if(fl > 0) v_patientSet = true;  ///< a patient data file was found
+  PR("Hardware Model: "); PR(p_modelNumber); PR("    Serial Number: "); PR(p_serialNumber);
   PR("\n\n");
   setupP();
   setupQ();
-//  servoDual.attach(9);    ///< actuates both valve bodies alternately 9
-//  servoPEEP.attach(10);   ///< actuates PEEP valve only 10
-//  servoCPAP.attach(11);   ///< actuates CPAP valve only 11
   servoDual.write(aMid);
   servoPEEP.write(aMaxPEEP); 
   servoCPAP.write(aMaxCPAP);  
@@ -90,19 +88,17 @@ int YGKMV::begin(){
 /**************************************************************************/
 /*!
     @brief Check
-    @param tUTC Current time UTC, unix time in seconds.
-    @param tzHours Local time zone in hours difference from UTC.
-    @param tSource the source of the time information
-    @param tAccuracy the accuracy of the time information in seconds,
-    0.0 for unknown
-    @return none
+    @param 
+    @return status value
 */
 /**************************************************************************/
-int YGKMV::status(){}
+int YGKMV::status(){
+  return 0;
+  }
 
 /**************************************************************************/
 /*!
-    @brief Go to Run mode.
+    @brief Go to Run mode by setting the appropriate state parameter flags.
     @param none
     @return none
 */

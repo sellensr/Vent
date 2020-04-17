@@ -44,14 +44,13 @@ int YGKMV::run(bool reset){
  
   uno.run();    // keep track of things
 
-  if(millis() - v_lastStop > STOP_MAX && !p_config){
-    // doConsoleCommand("R");  // re-enter run mode automatically
-//    p_closeCPAP = false;
-//    p_openAll = false;
-//    p_stopped = false;
-//    p_config = false;
+  if(millis() - v_lastStop > STOP_MAX && !p_config){  // too long a stop
     setRun();
   }
+
+  if(millis() > ALARM_HOLIDAY && v_patientSet){       // there's a patient to get back to and display is sleeping
+    setRun();
+  }  
 
   if (millis() - v_lastStop > ALARM_STOP && p_stopped){
       if(!v_alarmOnTime) v_alarmOnTime = millis();    // set alarm time if not already

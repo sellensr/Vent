@@ -100,6 +100,10 @@ class YGKMV{
     int readCalFlash();
     void delCalFlash();
     void wipeCalFlash();
+    int writePatFlash();
+    int readPatFlash();
+    void delPatFlash();
+    void wipePatFlash();
     void loopButtons();
     void loopOut();
     
@@ -178,6 +182,7 @@ class YGKMV{
     unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
     unsigned long v_lastStop = 0; ///< set to millis() when the last Stop Command input was received
     double v_tauW = 0.001;        ///< the smoothing weight factor to use this cycle for time constant p_tau
+    bool v_patientSet = false;    ///< set true if a patient data file is found, or if patient parameters have been set
     
     // p_ for all elements that are set parameters for desired performance
     double p_iph = IP_MAX;        ///< the inspiration pressure upper bound.
