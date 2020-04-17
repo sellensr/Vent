@@ -23,7 +23,7 @@
 /**************************************************************************/
 int YGKMV::run(bool reset){
   // use unsigned long for millis() values, but int for short times so positive/negative differences calculate correctly
-  static unsigned long lastPrint = 0;           // set to millis() when the last output was sent to Serial1
+  static unsigned long lastPrint = 0;           // set to millis() when the last output was sent to display port
   static unsigned long lastConsole = 0;         // set to millis() when the last output was sent to Serial
   static unsigned long lastCommand = 0;         // set to millis() when the last Command input was received
   static int perBreath = PB_DEF;                // the number of ms per timed breath, updated at the start of every breath
@@ -334,7 +334,7 @@ void YGKMV::loopButtons(){
 void YGKMV::loopOut()
 {
   // use unsigned long for millis() values, but int for short times so positive/negative differences calculate correctly
-  static unsigned long lastPrint = 0;           // set to millis() when the last output was sent to Serial1
+  static unsigned long lastPrint = 0;           // set to millis() when the last output was sent to display
   static unsigned long lastConsole = 0;         // set to millis() when the last output was sent to Serial
 
 /***********************SEND DATA TO CONSOLE / PLOTTER / DISPLAY UNIT**************/  
@@ -350,7 +350,7 @@ void YGKMV::loopOut()
     sprintf(sc, "%s, %5.2f, %5.2f", sc, v_pp, v_pl);
     sprintf(sc, "%s, %5.2f", sc, v_batv); // could be added on the end
     sprintf(sc, "%s\n", sc);
-    Serial1.print(sc);
+    if(display) display->print(sc);
     if(p_printConsole){
       lastConsole = millis();
       if(p_plotterMode){

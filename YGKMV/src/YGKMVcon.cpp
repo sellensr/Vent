@@ -54,7 +54,7 @@ void YGKMV::listConsoleCommands() {
 
 /**************************************************************************/
 /*!
-    @brief Handle console input/output functions on USB and on Serial1 for
+    @brief Handle console input/output functions on USB and on display for
             display unit.
     @param none
     @return true if a command line was received, false otherwise
@@ -80,7 +80,7 @@ bool YGKMV::loopConsole(){
   }
 
   if(display){   // ignore display if it doesn't exist
-    // exactly the same, except for commands input from Serial1 to ci1
+    // exactly the same, except for commands input from display port to ci1
     static String ci1 = "";
     if (readDisplayCommand(&ci1)) {
       ret = true;
@@ -89,9 +89,14 @@ bool YGKMV::loopConsole(){
       // or just send the whole String to one of these functions for parsing and
       // action
       if (!doConsoleCommand(ci1)) {
+        display->print("NOACK Not an application specific command: ");
+        display->println(ci1);
         P("NOACK Not an application specific command: ");
         PL(ci1);
         listConsoleCommands();
+      } else {
+        display->print("ACK Command Received: ");
+        display->println(ci1);      
       }
       ci1 = ""; // don't call readConsoleCommand() again until you have cleared the
                // string
@@ -424,7 +429,7 @@ boolean YGKMV::readConsoleCommand(String *consoleIn) {
 }
 /**************************************************************************/
 /*!
-    @brief Same as readConsoleCommand() except using Serial1
+    @brief Same as readConsoleCommand() except using display port
     @param consoleIn pointer to the String to store the input line.
     @return true if we got to the end of a line, otherwise false.
 */

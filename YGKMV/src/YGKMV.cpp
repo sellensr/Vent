@@ -50,7 +50,7 @@ int YGKMV::begin(){
   uno.begin(consoleSpeed);
   if(display){ 
     display->begin(displaySpeed);
-    while(!Serial1 && millis() < 5000);
+    while(!*display && millis() < 5000);
   }
   servoCPAP.attach(dPins[CPAP]);   ///< actuates CPAP valve only 11
   servoPEEP.attach(dPins[PEEP]);   ///< actuates PEEP valve only 10
@@ -82,9 +82,10 @@ int YGKMV::begin(){
     PR("Serial lines of CSV data at 115200 baud\n");
     PR("  millis(),  prog,  CPAP,  PEEP,  Dual,  v_o2,   v_p,   v_q, v_ipp, v_ipl,  v_it, v_epp, v_epl,  v_et, v_bpm,   v_v,   v_mv, v_alarm, v_ie, plus other stuff\n");
   }
-  Serial1.print("Serial lines of CSV data at 115200 baud\n");
-  Serial1.print("  millis(),  prog,  CPAP,  PEEP,  Dual,  v_o2,   v_p,   v_q, v_ipp, v_ipl,  v_it, v_epp, v_epl,  v_et, v_bpm,   v_v,   v_mv, v_alarm, v_ie, plus other stuff\n");
-
+  if(display){
+    display->print("Serial lines of CSV data at 115200 baud\n");
+    display->print("  millis(),  prog,  CPAP,  PEEP,  Dual,  v_o2,   v_p,   v_q, v_ipp, v_ipl,  v_it, v_epp, v_epl,  v_et, v_bpm,   v_v,   v_mv, v_alarm, v_ie, plus other stuff\n");
+  }
   return status();
 }
 
