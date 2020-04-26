@@ -37,10 +37,15 @@
 #define YGKMV_EXT_ERROR  0b1000000000000000  ///< 32768 External Error
 #define YGKMV_BUZ_ERROR  0b1111100000000000  ///< Only make a local buzzer noise for these error states
 
-#define BLUE_BUTTON_PIN     12
-#define YELLOW_BUTTON_PIN    3
-#define RED_BUTTON_PIN       4
-#define MAX_COMMAND_LENGTH 200    // no lines longer than this for commands or output
+#define BLUE_BUTTON_PIN     12  ///< pin with blue button pulled low when pushed
+#define YELLOW_BUTTON_PIN    3  ///< pin with yellow button pulled low when pushed
+#define RED_BUTTON_PIN       4  ///< pin with red button pulled low when pushed
+#define BLOWER_SPEED_PIN    A0  ///< analogWrite() between about 350 and 750 for speed
+#define BLOWER_MIN         350
+#define BLOWER_MID         550
+#define BLOWER_MAX         750         
+#define BLOWER_SWITCH_PIN    7  ///< set high to send power to the blower (n channel MOSFET)
+#define MAX_COMMAND_LENGTH 200  ///< no lines longer than this for commands or output
 
 #define PB_DEF 10000    ///< breathing rate default [ms / breath]
 #define PB_MAX 10000    ///< slowest breathing
@@ -142,6 +147,7 @@ class YGKMV{
     double fracCPAP = 1.0;  ///< target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
     double fracPEEP = 1.0;  ///< target opening fraction for the CPAP valve. 0 for closed, 1.0 for wide open
     double fracDual = 0.0;  ///< target position for Dual Valve. 0.0 for halfway between, 1.0 fully opens CPAP, -1.0 fully opens PEEP
+    int blowerSpeed = BLOWER_MIN;   ///< target speed setting for the blower in analog output units
     double prog = 0;        ///< progress through the current scheduled breath
     
     // Class Global Variables from UI definition + a bit more

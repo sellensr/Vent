@@ -181,6 +181,7 @@ int YGKMV::run(bool reset){
     fracPEEP = 0;
     fracCPAP = 1.0;
     fracDual = 1.0;
+    blowerSpeed = BLOWER_MID;
     endInspiration = millis();
     if(phaseTime > eiTime){   // no longer in transition phase
       v_ie = 1;
@@ -208,6 +209,7 @@ int YGKMV::run(bool reset){
     fracPEEP = 1.0;
     fracCPAP = 0.0;
     fracDual = -1.0;
+    blowerSpeed = BLOWER_MIN;
     endExpiration = millis();
     if(phaseTime < -ieTime){ // no longer in transition phase
       v_ie = -1;
@@ -240,7 +242,7 @@ int YGKMV::run(bool reset){
     v_ie = 0;
   }
 
-/************************TRANSLATE TO SERVO POSITIONS AND CHECK, THEN WRITE*****/  
+/***TRANSLATE TO SERVO POSITIONS AND CHECK, THEN WRITE SERVOS AND BLOWER*****/  
   // force fractions in range and translate to servo positions
   fracCPAP = max(fracCPAP,0.0); fracCPAP = min(fracCPAP,1.0);
   int posCPAP = aMinCPAP + (aMaxCPAP - aMinCPAP) * fracCPAP;
@@ -252,6 +254,8 @@ int YGKMV::run(bool reset){
   servoDual.write(posDual);
   servoCPAP.write(posCPAP);
   servoPEEP.write(posPEEP);
+  analogWrite(BLOWER_SPEED_PIN,blowerSpeed);
+
 
 /***************************RESPOND TO BUTTON(S)*******************************/  
   loopButtons();

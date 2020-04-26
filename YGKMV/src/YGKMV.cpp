@@ -74,6 +74,8 @@ int YGKMV::begin(){
   pinMode(YELLOW_BUTTON_PIN, INPUT_PULLUP);
   pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
   pinMode(aPins[ALARM], OUTPUT);
+  pinMode(BLOWER_SPEED_PIN, OUTPUT);
+  analogWrite(BLOWER_SPEED_PIN,BLOWER_MIN);
   digitalWrite(aPins[ALARM], HIGH);
   delay(5); ///< just long enough to make a little squeak so you know it is waking up
   digitalWrite(aPins[ALARM], LOW);
