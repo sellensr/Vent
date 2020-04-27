@@ -93,11 +93,13 @@ int YGKMV::setupFlash(){
   } else {
     Serial.println("Calibration file found, reading in the saved values...");
     ret += readCalFlash();
+    PR("readCalFlash() returns "); PL(ret);
   }
   if(!ret){ // still OK, so check the patient file
     if (fatfs.exists("/vent/patient.txt")) {
       Serial.println("Patient file found, reading in the saved values...");
       int rp = readPatFlash();
+      PR("readPatFlash() returns "); PL(rp);
       if(rp) return rp;
       else ret += 1;
     } else Serial.println("Patient file not found...");  

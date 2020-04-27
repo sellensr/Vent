@@ -37,6 +37,7 @@ int YGKMV::run(bool reset){
   static int phaseTime = 0;                     // time in phase [ms] signed with flow direction, positive for inspiration, negative for expiration, never reset to 0
   static bool startedInspiration = false;       // set false at start of breath, then true once we have inspiration at pressure
   static bool stoppedInspiration = false;       // set false at start of breath, then true once inspiration is stopped
+  static double dpI = 0.0;                      // the integrated pressure error in cmH2O seconds
 
 /*********************UPDATE MEASUREMENTS AND PARAMETERS************************/ 
 
@@ -159,7 +160,7 @@ int YGKMV::run(bool reset){
   v_pmax = max(v_p,v_pmax);
   v_pmin = min(v_p,v_pmin);
   if ((v_p > 1.0)               // we have a pressure 
-    && (v_p > p_iph - p_iphTol) // and are above expiration trigger 
+    && (v_p > p_iph + p_iphTol) // and are above expiration trigger 
     && p_trigEnabled            // and triggering is enabled
     && v_itr > p_itl)           // and we have been in inspiration phase long enough to trigger
     stoppedInspiration = true;
@@ -176,6 +177,7 @@ int YGKMV::run(bool reset){
       startInspiration = millis(); 
       v_ie = 0;
       v_ieEntered = 1;
+      dpI = 0;  // restart integral control
     }
     phaseTime = millis() - startInspiration;
     if(phaseTime > IT_MIN) startedInspiration = true;   // we could stop now
@@ -207,6 +209,7 @@ int YGKMV::run(bool reset){
       startExpiration = millis();
       v_ie = 0;
       v_ieEntered = -1;
+      dpI = 0;  // restart integral control
     } 
     phaseTime = -((int) millis() - startExpiration);
     v_pSet = p_epl;
@@ -261,7 +264,9 @@ int YGKMV::run(bool reset){
   servoCPAP.write(posCPAP);
   servoPEEP.write(posPEEP);
   // set the blower speed in accord with v_pSet and current measured pressure and write
-  blowerSpeed += (BLOWER_MAX - BLOWER_MIN) * (v_pSet - v_p) * BLOWER_GAIN;
+  dpI += (v_pSet - v_p) * uno.dt() / 1000000.;      // dt is in microseconds since last time through
+  blowerSpeed += (BLOWER_MAX - BLOWER_MIN) * (v_pSet - v_p) * BLOWER_GAIN;  // proportional control signal
+  blowerSpeed += (BLOWER_MAX - BLOWER_MIN) * dpI * BLOWER_GAIN_I;           // integral gain signal
   blowerSpeed = min(blowerSpeed,BLOWER_MAX);
   blowerSpeed = max(blowerSpeed,BLOWER_MIN);
   analogWrite(BLOWER_SPEED_PIN,blowerSpeed);
@@ -369,7 +374,7 @@ void YGKMV::loopOut()
     if(p_printConsole){
       lastConsole = millis();
       if(p_plotterMode){
-        PL("pSet, Pressure[cmH2O], Phase, v_q, v_vr/100");
+        PL("pSet, Pressure[cmH2O], Phase, v_q/10, v_vr/100");
         P(v_pSet);
         PCS(v_p);    // use with Serial plotter to visualize the pressure output
 //        PCS(p_iph - p_iphTol);
@@ -377,7 +382,7 @@ void YGKMV::loopOut()
 //        PCS(v_itr/1000.);
 //        PCS(v_etr/1000.);
         PCS(v_ie + 10);
-        PCS(v_q);
+        PCS(v_q/10);
         PCS(v_vr/100);
 //        PCS(v_mv);
 //        PCS(v_bpms);

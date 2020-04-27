@@ -157,7 +157,7 @@ void loop()
   v_pmax = max(v_p,v_pmax);
   v_pmin = min(v_p,v_pmin);
   if ((v_p > 1.0)               // we have a pressure 
-    && (v_p > p_iph - p_iphTol) // and are above expiration trigger 
+    && (v_p > p_iph + p_iphTol) // and are above expiration trigger 
     && p_trigEnabled            // and triggering is enabled
     && v_itr > p_itl)           // and we have been in inspiration phase long enough to trigger
     stoppedInspiration = true;

@@ -47,6 +47,13 @@ YGKMV::~YGKMV() {}
 */
 /**************************************************************************/
 int YGKMV::begin(){
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BLUE_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(YELLOW_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(aPins[ALARM], OUTPUT);
+  pinMode(BLOWER_SPEED_PIN, OUTPUT);
+  analogWrite(BLOWER_SPEED_PIN,BLOWER_MIN);
   uno.begin(consoleSpeed);
   if(display){ 
     display->begin(displaySpeed);
@@ -57,6 +64,7 @@ int YGKMV::begin(){
   servoDual.attach(dPins[DUAL]);   ///< actuates both valve bodies alternately 9
   PR("\n\nYGK Modular Ventilator\n\nFirmware Library Version: "); PL(YGKMV_VERSION); 
   int fl = setupFlash();   // reads all the calibration data, hardware model and serial numbers
+  PR("setupFlash() returns "); PL(fl);
   if(fl > 0) v_patientSet = true;  ///< a patient data file was found
   if(fl < 0){ ///< no calibration file was found
     v_calFile = false;  
@@ -69,13 +77,6 @@ int YGKMV::begin(){
   servoPEEP.write(aMaxPEEP); 
   servoCPAP.write(aMaxCPAP);  
 
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  pinMode(BLUE_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(YELLOW_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(aPins[ALARM], OUTPUT);
-  pinMode(BLOWER_SPEED_PIN, OUTPUT);
-  analogWrite(BLOWER_SPEED_PIN,BLOWER_MIN);
   digitalWrite(aPins[ALARM], HIGH);
   delay(5); ///< just long enough to make a little squeak so you know it is waking up
   digitalWrite(aPins[ALARM], LOW);
