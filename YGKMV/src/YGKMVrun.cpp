@@ -260,6 +260,10 @@ int YGKMV::run(bool reset){
   servoDual.write(posDual);
   servoCPAP.write(posCPAP);
   servoPEEP.write(posPEEP);
+  // set the blower speed in accord with v_pSet and current measured pressure and write
+  blowerSpeed += (BLOWER_MAX - BLOWER_MIN) * (v_pSet - v_p) * BLOWER_GAIN;
+  blowerSpeed = min(blowerSpeed,BLOWER_MAX);
+  blowerSpeed = max(blowerSpeed,BLOWER_MIN);
   analogWrite(BLOWER_SPEED_PIN,blowerSpeed);
 
 

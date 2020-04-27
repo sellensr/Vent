@@ -45,6 +45,7 @@
 #define BLOWER_MID         550
 #define BLOWER_MAX         750         
 #define BLOWER_SWITCH_PIN    7  ///< set high to send power to the blower (n channel MOSFET)
+#define BLOWER_GAIN        0.1  ///< proportional control gain
 #define MAX_COMMAND_LENGTH 200  ///< no lines longer than this for commands or output
 
 #define PB_DEF 10000    ///< breathing rate default [ms / breath]
