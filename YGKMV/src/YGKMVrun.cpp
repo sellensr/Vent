@@ -175,16 +175,18 @@ int YGKMV::run(bool reset){
     if(phaseTime < 0){  // We just switched over from expiration
       startInspiration = millis(); 
       v_ie = 0;
+      v_ieEntered = 1;
     }
     phaseTime = millis() - startInspiration;
     if(phaseTime > IT_MIN) startedInspiration = true;   // we could stop now
+    v_pSet = p_iph;
     fracPEEP = 0;
     fracCPAP = 1.0;
     fracDual = 1.0;
     blowerSpeed = BLOWER_MID;
     endInspiration = millis();
     if(phaseTime > eiTime){   // no longer in transition phase
-      v_ie = 1;
+      v_ieEntered = v_ie = 1;
       v_ipmax = max(v_p,v_ipmax);
       v_ipmin = min(v_p,v_ipmin);
       if (v_p < p_ipl){                               // pressure is too low
@@ -204,15 +206,17 @@ int YGKMV::run(bool reset){
     if(phaseTime > 0){
       startExpiration = millis();
       v_ie = 0;
+      v_ieEntered = -1;
     } 
     phaseTime = -((int) millis() - startExpiration);
+    v_pSet = p_epl;
     fracPEEP = 1.0;
     fracCPAP = 0.0;
     fracDual = -1.0;
     blowerSpeed = BLOWER_MIN;
     endExpiration = millis();
     if(phaseTime < -ieTime){ // no longer in transition phase
-      v_ie = -1;
+      v_ieEntered = v_ie = -1;
       v_epmax = max(v_p,v_epmax);
       v_epmin = min(v_p,v_epmin);
       if (v_p < p_epl){                               // pressure is too low
@@ -229,17 +233,19 @@ int YGKMV::run(bool reset){
 
 /***********************CPAP VALVE CLOSED BY DISPLAY UNIT*******************/
   if(p_closeCPAP){    // force the CPAP closed
+    v_pSet = 0.0;
     fracCPAP = 0.0;
     fracPEEP = 1.0;
     fracDual = -1.0;
-    v_ie = 0;
+    v_ieEntered = v_ie = 0;
   }
 /***********************ALL VALVES OPENED BY DISPLAY UNIT*******************/
   if(p_openAll){
+    v_pSet = 0.0;
     fracCPAP = 1.0;
     fracPEEP = 1.0;
     fracDual = 0.0;
-    v_ie = 0;
+    v_ieEntered = v_ie = 0;
   }
 
 /***TRANSLATE TO SERVO POSITIONS AND CHECK, THEN WRITE SERVOS AND BLOWER*****/  
@@ -360,7 +366,7 @@ void YGKMV::loopOut()
       lastConsole = millis();
       if(p_plotterMode){
         PL("pSet, Pressure[cmH2O], Phase, v_q, v_vr/100");
-        if(fracDual > 0) P(p_iph); else P(p_epl);
+        P(v_pSet);
         PCS(v_p);    // use with Serial plotter to visualize the pressure output
 //        PCS(p_iph - p_iphTol);
 //        PCS(p_epl + p_eplTol);

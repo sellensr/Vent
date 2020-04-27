@@ -63,6 +63,11 @@
 #define EP_MIN 1        ///< Expiration pressure min
 #define EPLTOL_MAX 10   ///< Max value for the tolerance
 
+#define IQ_MAX 50       ///< Inspiration flow max [lpm]
+#define EQ_MAX 50       ///< Expiration flow max [lpm]
+#define IQ_MIN 0        ///< Inspiration flow min [lpm]
+#define EQ_MIN 0        ///< Expiration flow min [lpm]
+
 #define STOP_MAX 600000000L ///< Max time in stop mode, set really long to limit auto restart capability, 600000000L is about a week
 #define OUTPUT_INTERVAL 50  ///< minimum [ms] between output lines
 
@@ -155,7 +160,9 @@ class YGKMV{
     // Not necessarily declared in order of output to the display unit. Check the output code.
     double v_o2 = 0.0;            ///< measured instantaneous oxygen volume fraction [0 to 1.0]
     double v_p = 0.0;             ///< current instantaneous pressure [cm H2O]
+    double v_pSet = 0.0;          ///< current set point pressure for controls to target [cm H2O]
     double v_q = 0.0;             ///< current instantaneous flow to patient [l/min]
+    double v_qSetHigh = IQ_MAX;   ///< current set point high limit for instantaneous flow to patient [l/min]
     double v_qCPAP = 0.0;         ///< current instantaneous flow returning on PEEP side [l/min]
     double v_qPEEP = 0.0;         ///< current instantaneous flow out on CPAP side [l/min]
     double v_pp = 0.0;            ///< highest pressure during any phase of last breath [cm H2o]
@@ -186,6 +193,7 @@ class YGKMV{
     double v_CPAPv = 0.;          ///< measured CPAP side flow element voltage
     double v_PEEPv = 0.;          ///< measured PEEP side flow element voltage
     int v_ie = 0;                 ///< set to 0 when between phases, 1 for inspiration phase, -1 for expiration phase
+    int v_ieEntered = 0;          ///< like v_ie, except no transition. Always set to phase entering or in, only 0 on stop
     unsigned long v_alarmOnTime = 0;    ///< time of the first alarm state that occurred since all alarms were clear
     unsigned long v_alarmOffTime = 0;   ///< time that alarms were last cleared
     unsigned long v_lastStop = 0; ///< set to millis() when the last Stop Command input was received
